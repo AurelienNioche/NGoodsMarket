@@ -123,7 +123,7 @@ def main(args):
 
         # ---------------------- Produce data ------------------ #
 
-        if args.force:
+        if args.force or not os.path.exists("data/phase.p"):
 
             bkup = get_parameters()
 
