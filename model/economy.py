@@ -5,9 +5,10 @@ import itertools as it
 
 class Economy(object):
 
-    def __init__(self, repartition_of_roles, t_max, agent_model, economy_model,
-                 cognitive_parameters=None):
+    def __init__(self, repartition_of_roles, t_max, agent_model, economy_model, seed,
+                 cognitive_parameters=None,):
 
+        np.random.seed(seed)
         self.t_max = t_max
         self.cognitive_parameters = cognitive_parameters
         self.agent_model = agent_model
@@ -85,7 +86,8 @@ class Economy(object):
                     prod=i, cons=j,
                     cognitive_parameters=self.cognitive_parameters,
                     n_goods=self.n_goods,
-                    idx=agent_idx)
+                    idx=agent_idx
+                )
 
                 agents.append(a)
                 agent_idx += 1

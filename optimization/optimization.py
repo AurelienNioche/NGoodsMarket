@@ -268,6 +268,7 @@ def optimize_5_goods():
     print("Best repartition found: {}, {}, {}, {}, {}".format(
         int(best["a"]), int(best["b"]), int(best["c"]), int(best["d"]), int(best["e"])))
 
+
 if __name__ == "__main__":
 
     optimize_3_goods()

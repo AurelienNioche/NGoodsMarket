@@ -14,7 +14,9 @@ class RLOnAcceptanceAgent(StupidAgent):
         super().__init__(prod=prod, cons=cons, n_goods=n_goods, cognitive_parameters=cognitive_parameters, idx=idx)
 
         self.alpha = cognitive_parameters["alpha"]
-        self.temp = cognitive_parameters["temp"]
+        self.beta = cognitive_parameters["beta"]
+        self.epsilon = cognitive_parameters.get("epsilon")
+        self.temp = cognitive_parameters.get("temp")
 
         self.acceptance = self.get_acceptance_dic(n_goods)
 
@@ -48,15 +50,34 @@ class RLOnAcceptanceAgent(StupidAgent):
                     break
 
             if num:
-                value = 1/num
+                print(num)
+                value = 1 / (1 + self.beta) ** float(num)
             else:
                 value = 0
 
             exchanges.append(path[0])
             values.append(value)
 
+        return self.epsilon_rule(values, exchanges)
+
+    def softmax_rule(self, values, exchanges):
+
         p = softmax(np.array(values), temp=self.temp)
         self.attempted_exchange = exchanges[np.random.choice(range(len(exchanges)), p=p)]
+
+        return self.attempted_exchange
+
+    def epsilon_rule(self, values, exchanges):
+
+        max_idx = np.argmax(values)
+
+        if np.random.random() < self.epsilon:
+            del exchanges[max_idx]
+            random_idx = np.random.randint(len(exchanges))
+            self.attempted_exchange = exchanges[random_idx]
+
+        else:
+            self.attempted_exchange = exchanges[max_idx]
 
         return self.attempted_exchange
 
