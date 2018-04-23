@@ -99,9 +99,9 @@ def main(args):
     if not args.phase:
 
         cognitive_parameters = {
-        "alpha": 0.1,
-        "epsilon": 0.1,
-        "beta": 1,
+            "alpha": 0.1,
+            "epsilon": 0.1,
+            "beta": 1,
         }
 
         parameters = {
