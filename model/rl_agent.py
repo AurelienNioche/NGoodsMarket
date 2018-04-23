@@ -50,7 +50,6 @@ class RLOnAcceptanceAgent(StupidAgent):
                     break
 
             if num:
-                print(num)
                 value = 1 / (1 + self.beta) ** float(num)
             else:
                 value = 0

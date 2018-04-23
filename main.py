@@ -96,15 +96,13 @@ def run(*args):
 
 def main(args):
 
-    cognitive_parameters = {
-        "alpha": 0.1,
-        "temp": 0.01,
-        "beta": 1,
-        # "memory_span": 10,
-        "u": 1
-    }
-
     if not args.phase:
+
+        cognitive_parameters = {
+        "alpha": 0.1,
+        "epsilon": 0.1,
+        "beta": 1,
+        }
 
         parameters = {
             "repartition_of_roles": [30, 30, 60],
@@ -189,7 +187,7 @@ if __name__ == "__main__":
     parser.add_argument('-f', '--force', action="store_true", default=False,
                         help="Force creation of new data.")
 
-    parser.add_argument('-ml', '--multiprocessing', action="store_true", default=False,
+    parser.add_argument('-m', '--multiprocessing', action="store_true", default=False,
                         help="Force creation of new data.")
 
     parsed_args = parser.parse_args()

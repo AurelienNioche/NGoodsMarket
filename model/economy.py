@@ -5,7 +5,7 @@ import itertools as it
 
 class Economy(object):
 
-    def __init__(self, repartition_of_roles, t_max, agent_model, economy_model, seed,
+    def __init__(self, repartition_of_roles, t_max, agent_model, economy_model, seed=None,
                  cognitive_parameters=None,):
 
         np.random.seed(seed)
