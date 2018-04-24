@@ -1,30 +1,28 @@
 import numpy as np
-from tqdm import tqdm
 import itertools as it
 
 
 class Economy(object):
 
-    def __init__(self, repartition_of_roles, t_max, agent_model, economy_model, seed=None,
-                 cognitive_parameters=None,):
+    def __init__(self, repartition, t_max, agent_model, economy_model, cognitive_parameters=None, seed=None):
 
         np.random.seed(seed)
         self.t_max = t_max
         self.cognitive_parameters = cognitive_parameters
         self.agent_model = agent_model
-        self.repartition_of_roles = np.asarray(repartition_of_roles)
+        self.repartition = np.asarray(repartition)
 
-        self.n_goods = len(self.repartition_of_roles)
+        self.n_goods = len(self.repartition)
         self.roles = self.get_roles(self.n_goods, economy_model)
 
-        self.n_agent = sum(self.repartition_of_roles)
+        self.n_agent = sum(self.repartition)
 
         self.agents = None
 
         # ----- For backup at t ----- #
-        self.exchanges = dict()
+        self.exchange = dict()
         for i in it.combinations(range(self.n_goods), r=2):
-            self.exchanges[i] = 0
+            self.exchange[i] = 0
         self.n_exchange = 0
         self.consumption = 0
         self.good_used_as_medium = np.zeros(self.n_goods)
@@ -37,15 +35,15 @@ class Economy(object):
 
         # ---- For final backup ----- #
         self.back_up = {
-            "exchanges": [],
-            "n_exchanges": [],
-            "consumption": [],
-            "good_used_as_medium": [],
-            "proportions": []
+            'exchange': [],
+            'n_exchange': [],
+            'consumption_ratio': [],
+            'medium': [],
+            'proportion': []
         }
 
         self.markets = self.get_markets(self.n_goods)
-        self.exchanges_types = [i for i in it.combinations(range(self.n_goods), r=2)]
+        self.exchange_types = [i for i in it.combinations(range(self.n_goods), r=2)]
 
     @staticmethod
     def get_markets(n_goods):
@@ -58,16 +56,16 @@ class Economy(object):
     def get_roles(n_goods, model):
 
         roles = np.zeros((n_goods, 2), dtype=int)
-        if model == "prod: i+1":
+        if model == 'prod: i+1':
             for i in range(n_goods):
                 roles[i] = (i+1) % n_goods, i
 
-        elif model == "prod: i-1":
+        elif model == 'prod: i-1':
             for i in range(n_goods):
                 roles[i] = (i-1) % n_goods, i
 
         else:
-            raise Exception("Model '{}' is not defined.".format(model))
+            raise Exception(f'Model "{model}" is not defined.')
 
         return roles
 
@@ -77,7 +75,7 @@ class Economy(object):
 
         agent_idx = 0
 
-        for agent_type, n in enumerate(self.repartition_of_roles):
+        for agent_type, n in enumerate(self.repartition):
 
             i, j = self.roles[agent_type]
 
@@ -101,8 +99,7 @@ class Economy(object):
 
     def play(self):
 
-        for t in tqdm(range(self.t_max)):
-
+        for t in range(self.t_max):
             self.time_step()
 
         return self.back_up
@@ -132,7 +129,7 @@ class Economy(object):
             self.markets[agent_choice].append(agent.idx)
 
         success_idx = []
-        for i, j in self.exchanges_types:
+        for i, j in self.exchange_types:
 
             a1 = self.markets[(i, j)]
             a2 = self.markets[(j, i)]
@@ -140,7 +137,7 @@ class Economy(object):
 
             if min_a:
 
-                self.exchanges[(i, j)] += min_a
+                self.exchange[(i, j)] += min_a
                 self.n_exchange += min_a
                 success_idx += list(np.random.choice(a1, size=min_a, replace=False))
                 success_idx += list(np.random.choice(a2, size=min_a, replace=False))
@@ -163,7 +160,7 @@ class Economy(object):
             self.proportions[i.C, i.H] += 1  # Type of agent is his consumption good
 
         for i in range(self.n_goods):
-            self.proportions[i] = self.proportions[i] / self.repartition_of_roles[i]
+            self.proportions[i] = self.proportions[i] / self.repartition[i]
 
     def make_a_backup_for_t(self):
 
@@ -172,25 +169,25 @@ class Economy(object):
 
         # ----- FOR FUTURE BACKUP ----- #
 
-        for key in self.exchanges.keys():
+        for key in self.exchange.keys():
             # Avoid division by zero
             if self.n_exchange > 0:
-                self.exchanges[key] /= self.n_exchange
+                self.exchange[key] /= self.n_exchange
             else:
-                self.exchanges[key] = 0
+                self.exchange[key] = 0
 
         # For back up
-        self.back_up["exchanges"].append(self.exchanges.copy())
-        self.back_up["consumption"].append(self.consumption)
-        self.back_up["n_exchanges"].append(self.n_exchange)
-        self.back_up["good_used_as_medium"].append(self.good_used_as_medium.copy())
-        self.back_up["proportions"].append(self.proportions.copy())
+        self.back_up['exchange'].append(self.exchange.copy())
+        self.back_up['consumption_ratio'].append(self.consumption)
+        self.back_up['n_exchange'].append(self.n_exchange)
+        self.back_up['medium'].append(self.good_used_as_medium.copy())
+        self.back_up['proportion'].append(self.proportions.copy())
 
     def reinitialize_backup_containers(self):
 
         # Containers for future backup
-        for k in self.exchanges.keys():
-            self.exchanges[k] = 0
+        for k in self.exchange.keys():
+            self.exchange[k] = 0
         self.n_exchange = 0
         self.consumption = 0
         self.good_used_as_medium[:] = 0

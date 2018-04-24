@@ -1,9 +1,13 @@
 import pickle
+import os
+
+folder = 'data'
 
 
 def save(obj, file):
-    pickle.dump(obj=obj, file=open(f'data/{file}', 'wb'))
+    os.makedirs(folder, exist_ok=True)
+    pickle.dump(obj=obj, file=open(f'{folder}/{file}', 'wb'))
 
 
 def load(file):
-    return pickle.load(file=open(f'data/{file}', 'rb'))
+    return pickle.load(file=open(f'{folder}/{file}', 'rb'))

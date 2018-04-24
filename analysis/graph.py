@@ -160,28 +160,28 @@ def represent_results(backup, parameters):
 
 def phase_diagram(backup):
 
-    # Get meta parameters
-    repartitions = backup["meta_parameters"]["repartitions"]
-    fixed_good = backup["meta_parameters"]["fixed_good"]
-    fixed_type_n = backup["meta_parameters"]["fixed_good_n"]
-    cognitive_parameters = backup["meta_parameters"]["possible_cognitive_parameters"]
-    decision_rule = backup["meta_parameters"]["decision_rule"]
+    fixed_good = 'x0'
+    fixed_type_n = backup.repartition[0][0]
+    n = len(backup.repartition)
+    t_max = len(backup.medium[0])
+    n_good = len(backup.repartition[0])
 
     plot_phase_diagram(
-        backup=backup,
-        repartitions=repartitions,
+        medium=backup.medium,
+        repartition=backup.repartition,
         fixed_good=fixed_good,
         fixed_type_n=fixed_type_n,
-        cognitive_parameters=cognitive_parameters
+        n=n,
+        t_max=t_max,
+        n_good=n_good
     )
 
-    plot_cognitive_parameters(
-        backup=backup,
-        repartitions=repartitions,
-        cognitive_parameters=cognitive_parameters,
-        fixed_good=fixed_good,
-        decision_rule=decision_rule
-    )
+    # plot_cognitive_parameters(
+    #     backup=backup,
+    #     repartitions=repartitions,
+    #     cognitive_parameters=cognitive_parameters,
+    #     fixed_good=fixed_good,
+    # )
 
 
 def plot_cognitive_parameters(backup,
@@ -276,27 +276,26 @@ def plot_bar(backup, fixed_good, title, subplot_spec=None, fig=None):
     ax.bar(labels_pos, data, edgecolor="white", align="center", color="black")
 
 
-def plot_phase_diagram(backup, repartitions, fixed_good, fixed_type_n, cognitive_parameters):
+def plot_phase_diagram(medium, repartition, fixed_good, fixed_type_n, n, t_max, n_good):
 
-    scores = []
+    money = np.zeros(n)
 
-    for r in repartitions:
+    for i in range(n):
 
-        d = np.array([
-            is_monetary(backup=backup[r][c],
-                        parameters=backup[r][c]["parameters"],
-                        fixed_good=fixed_good
-            )
-            for c in cognitive_parameters
-        ])
+        money[i] = is_monetary(
+            medium=medium[i],
+            t_max=t_max,
+            fixed_good=fixed_good,
+            n_good=n_good
+        )
 
-        scores.append(np.sum(d) / len(d))
+    unique_repartition = np.unique(repartition)
 
-    d = np.array(scores)
+    scores = np.array([np.mean([money[i] for i in range(n) if repartition[i] == r]) for r in unique_repartition])
 
-    n = int(np.sqrt(len(repartitions)))
+    n_side = int(np.sqrt(len(unique_repartition)))
 
-    data = d.reshape(n, n).T
+    data = scores.reshape(n_side, n_side).T
 
     fig, ax = plt.subplots()
 
@@ -305,9 +304,9 @@ def plot_phase_diagram(backup, repartitions, fixed_good, fixed_type_n, cognitive
     # Create colorbar
     cbar = ax.figure.colorbar(im, ax=ax)
 
-    labels = sorted(list(set([i[0] for i in repartitions])))
+    labels = np.unique([i[1] for i in unique_repartition])
 
-    ticks = np.arange(n)
+    ticks = np.arange(n_side)
 
     ax.set_xticks(ticks)
     ax.set_yticks(ticks)
@@ -320,25 +319,23 @@ def plot_phase_diagram(backup, repartitions, fixed_good, fixed_type_n, cognitive
 
     ax.set_title(f"Money emergence with x0 = {fixed_type_n} and good = {fixed_good}")
     fig.tight_layout()
-    plt.savefig("phase.pdf")
+    os.makedirs('fig', exist_ok=True)
+    plt.savefig('fig/phase.pdf')
     plt.show()
 
 
-def is_monetary(backup, parameters, fixed_good):
-
-    t_max = parameters["t_max"]
-    n_goods = 3
+def is_monetary(medium, fixed_good, t_max, n_good):
 
     factor_medium_difference = 2
     threshold_time_duration = 80
 
-    good_count = np.zeros(n_goods, dtype=int)
+    good_count = np.zeros(n_good, dtype=int)
 
     last_good_in_memory = None
 
     for t in range(t_max):
 
-        d = np.array(backup["good_used_as_medium"][t])
+        d = np.array(medium[t])
         idx = np.flatnonzero(d == max(d))
 
         # If there is one max value
@@ -364,20 +361,3 @@ def is_monetary(backup, parameters, fixed_good):
     cond1 = np.argmax(good_count) == fixed_good
 
     return cond0 and cond1
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

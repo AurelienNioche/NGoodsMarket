@@ -1,8 +1,11 @@
 import numpy as np
 import itertools as it
+import math
 from model.stupid_agent import StupidAgent
 from model.get_paths import get_paths
-from model.utils import softmax
+# from model.utils import softmax
+
+np.seterr(all='raise')
 
 
 class RLOnAcceptanceAgent(StupidAgent):
@@ -13,10 +16,7 @@ class RLOnAcceptanceAgent(StupidAgent):
 
         super().__init__(prod=prod, cons=cons, n_goods=n_goods, cognitive_parameters=cognitive_parameters, idx=idx)
 
-        self.alpha = cognitive_parameters["alpha"]
-        self.beta = cognitive_parameters["beta"]
-        self.epsilon = cognitive_parameters.get("epsilon")
-        self.temp = cognitive_parameters.get("temp")
+        self.alpha, self.beta, self.gamma = cognitive_parameters
 
         self.acceptance = self.get_acceptance_dic(n_goods)
 
@@ -50,7 +50,10 @@ class RLOnAcceptanceAgent(StupidAgent):
                     break
 
             if num:
-                value = 1 / (1 + self.beta) ** float(num)
+                try:
+                    value = 1 / math.pow(1 + self.beta, num)
+                except OverflowError:
+                    value = 0
             else:
                 value = 0
 
@@ -59,18 +62,18 @@ class RLOnAcceptanceAgent(StupidAgent):
 
         return self.epsilon_rule(values, exchanges)
 
-    def softmax_rule(self, values, exchanges):
-
-        p = softmax(np.array(values), temp=self.temp)
-        self.attempted_exchange = exchanges[np.random.choice(range(len(exchanges)), p=p)]
-
-        return self.attempted_exchange
+    # def softmax_rule(self, values, exchanges):
+    #
+    #     p = softmax(np.array(values), temp=self.temp)
+    #     self.attempted_exchange = exchanges[np.random.choice(range(len(exchanges)), p=p)]
+    #
+    #     return self.attempted_exchange
 
     def epsilon_rule(self, values, exchanges):
 
         max_idx = np.argmax(values)
 
-        if np.random.random() < self.epsilon:
+        if np.random.random() < self.gamma:
             del exchanges[max_idx]
             random_idx = np.random.randint(len(exchanges))
             self.attempted_exchange = exchanges[random_idx]
