@@ -220,17 +220,17 @@ def run(bkp):
     scores = np.array([np.mean([money[i] for i in range(n) if bkp.repartition[i] == r]) for r in unq_repartition])
 
     # ---------------------- #
-    # if n_good == 3:
-    #
-    #     labels = np.unique([i[1] for i in unq_repartition])
-    #     n_side = len(labels)
-    #     data = scores.reshape(n_side, n_side).T
-    #     title = f"Money emergence with x0 = {fixed_type_n} and good = {fixed_good}"
-    #
-    #     _phase_diagram(title=title, data=data, labels=labels)
+    if n_good == 3:
+
+        labels = np.unique([i[1] for i in unq_repartition])
+        n_side = len(labels)
+        data = scores.reshape(n_side, n_side).T
+        title = f"Money emergence with x0 = {fixed_type_n} and good = {fixed_good}"
+
+        _phase_diagram(title=title, data=data, labels=labels)
 
     # ----------------------- #
-    if n_good == 3:
+    if n_good == 4:
         fig = plt.figure(figsize=(12, 10))
 
         ax = fig.add_subplot(111)
@@ -257,7 +257,6 @@ def run(bkp):
         # print(data)
         # data = {(i, j, k): np.random.random() for i, j, k in itertools.product(range(10), repeat=3)}
         tfg, tax = ternary.figure(ax=ax, scale=len(unq_values) - 1)
-
 
         tax.heatmap(data=data, style="triangular")
         tax.boundary()

@@ -16,8 +16,8 @@ def get_parameters():
 
     # ----- set these params ------ #
     x0 = 50
-    range_repartitions = range(10, 40, 5)
-    step = 2
+    range_repartitions = range(10, 201, 5)
+    step = 3
     alpha_range = np.linspace(0.1, 0.5, step)
     beta_range = np.linspace(0.75, 1.5, step)
     gamma_range = np.linspace(0.001, 0.15, step)
@@ -42,7 +42,7 @@ def get_parameters():
     for alpha, beta, gamma, rpt in var_param:
         param = {
             "cognitive_parameters": (alpha, beta, gamma),
-            "repartition": rpt,  # (x0, ) + rpt,
+            "repartition": (x0, ) + rpt,
             "t_max": t_max,
             "economy_model": economy_model,
             "agent_model": agent_model,
