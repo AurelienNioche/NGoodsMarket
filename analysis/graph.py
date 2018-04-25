@@ -4,253 +4,133 @@ import matplotlib.gridspec as gridspec
 import os
 
 
-class GraphicDesigner(object):
+import analysis.money
 
-    def __init__(self, backup, parameters):
 
-        self.exchanges_list = backup["exchanges"]
-        self.mean_utility_list = backup["consumption"]
-        self.n_exchanges_list = backup["n_exchanges"]
-        self.good_used_as_medium = backup["good_used_as_medium"]
-        self.proportions = backup["proportions"]
+def get_new_fig_name(fig_name):
+    
+    init_fig_name = fig_name.split(".")[0]
+    i = 2
+    while os.path.exists(fig_name):
+        fig_name = "{}{}.pdf".format(init_fig_name, i)
+        i += 1
+    
+    return fig_name
 
-        self.parameters = parameters
 
-        self.n_goods = len(self.good_used_as_medium[0])
+def _plot_main_fig(medium, exchange, consumption_ratio, repartition, cognitive_parameters):
 
-        self.main_figure_name = self.get_fig_name(name="NGoodsMarkets_main_fig")
-        self.proportions_figure_name = self.get_fig_name(name="NGoodsMarkets_proportions_fig")
+    t_max = len(medium)
+    n_good = len(medium[0])
 
-    @staticmethod
-    def get_fig_name(name, folder=os.path.expanduser("~/Desktop/NGoodsMarketFigs")):
+    # What is common to all subplots
+    fig = plt.figure(figsize=(25, 12))
+    fig.patch.set_facecolor('white')
 
-        os.makedirs(folder, exist_ok=True)
+    n_lines = 2
+    n_columns = 3
 
-        fig_name = "{}/{}.pdf".format(folder, name)
+    x = np.arange(t_max)
 
-        init_fig_name = fig_name.split(".")[0]
-        i = 2
-        while os.path.exists(fig_name):
-            fig_name = "{}{}.pdf".format(init_fig_name, i)
-            i += 1
+    # First subplot
+    ax = plt.subplot(n_lines, n_columns, 1)
+    ax.set_title("Proportion of each type of exchange according to time \n")
 
-        return fig_name
+    type_of_exchanges = sorted([i for i in exchange[0].keys()])
+    y = []
+    for i in range(len(type_of_exchanges)):
+        y.append([])
+    for t in range(t_max):
+        for exchange_idx in range(len(type_of_exchanges)):
+            y[exchange_idx].append(exchange[t][type_of_exchanges[exchange_idx]])
 
-    def plot_main_fig(self):
+    ax.set_ylim([-0.02, 1.02])
 
-        # What is common to all subplots
-        fig = plt.figure(figsize=(25, 12))
-        fig.patch.set_facecolor('white')
+    for exchange_idx in range(len(type_of_exchanges)):
+        ax.plot(x, y[exchange_idx], label="Exchange {}".format(type_of_exchanges[exchange_idx]), linewidth=2)
 
-        n_lines = 2
-        n_columns = 3
+    ax.legend()
 
-        x = np.arange(self.parameters["t_max"])
+    # Second subplot
+    ax = plt.subplot(n_lines, n_columns, 2)
+    ax.set_title("Consumption average according to time \n")
+    ax.plot(x, consumption_ratio, linewidth=2)
+
+    # Third subplot
+    ax = plt.subplot(n_lines, n_columns, 3)
+    ax.set_title("Total number of exchanges according to time \n")
+    ax.plot(x, consumption_ratio, linewidth=2)
+
+    # Fourth subplot
+    ax = plt.subplot(n_lines, n_columns, 4)
+    ax.set_title("How many times a good $i$ is used as a mean of exchange \n")
+
+    for i in range(n_good):
+        ax.plot(x, [j[i] for j in medium],
+                label="Good {}".format(i), linewidth=2)
+
+    ax.legend()
+
+    # Sixth subplot
+    ax = plt.subplot(n_lines, n_columns, 5)
+    ax.set_title("Parameters")
+    ax.axis('off')
+
+    msg = \
+        f"Cognitive parameters: {cognitive_parameters}; \n \n " \
+        f"Repartition of roles: {repartition}; \n \n " \
+        f"Time-steps: {t_max}. \n \n"
+
+    ax.text(0.5, 0.5, msg, ha='center', va='center', size=12)
+
+    plt.savefig('fig/main.pdf')
+
+    plt.close()
+
+
+def _plot_proportions(proportion):
+
+    # Container for proportions of agents having this or that in hand according to their type
+    #  - rows: type of agent
+    # - columns: type of good
+
+    n_good = len(proportion[0])
+
+    fig = plt.figure(figsize=(25, 12))
+    fig.patch.set_facecolor('white')
+
+    n_lines = n_good
+    n_columns = 1
+
+    x = np.arange(len(proportion))
+
+    for agent_type in range(n_good):
 
         # First subplot
-        ax = plt.subplot(n_lines, n_columns, 1)
-        ax.set_title("Proportion of each type of exchange according to time \n")
+        ax = plt.subplot(n_lines, n_columns, agent_type + 1)
+        ax.set_title(f"Proportion of agents of type {agent_type} having good i in hand\n")
 
-        type_of_exchanges = sorted([i for i in self.exchanges_list[0].keys()])
         y = []
-        for i in range(len(type_of_exchanges)):
+        for i in range(n_good):
             y.append([])
-        for t in range(self.parameters["t_max"]):
-            for exchange_idx in range(len(type_of_exchanges)):
-                y[exchange_idx].append(self.exchanges_list[t][type_of_exchanges[exchange_idx]])
+
+        for proportions_at_t in proportion:
+            for good in range(n_good):
+                y[good].append(proportions_at_t[agent_type, good])
 
         ax.set_ylim([-0.02, 1.02])
 
-        for exchange_idx in range(len(type_of_exchanges)):
-            ax.plot(x, y[exchange_idx], label="Exchange {}".format(type_of_exchanges[exchange_idx]), linewidth=2)
+        for good in range(n_good):
+            ax.plot(x, y[good], label="Good {}".format(good), linewidth=2)
 
         ax.legend()
 
-        # Second subplot
-        ax = plt.subplot(n_lines, n_columns, 2)
-        ax.set_title("Consumption average according to time \n")
-        ax.plot(x, self.mean_utility_list, linewidth=2)
+    plt.tight_layout()
 
-        # Third subplot
-        ax = plt.subplot(n_lines, n_columns, 3)
-        ax.set_title("Total number of exchanges according to time \n")
-        ax.plot(x, self.n_exchanges_list, linewidth=2)
-
-        # Fourth subplot
-        ax = plt.subplot(n_lines, n_columns, 4)
-        ax.set_title("How many times a good $i$ is used as a mean of exchange \n")
-
-        for i in range(self.n_goods):
-            ax.plot(x, [j[i] for j in self.good_used_as_medium],
-                    label="Good {}".format(i), linewidth=2)
-
-        ax.legend()
-
-        # Sixth subplot
-        ax = plt.subplot(n_lines, n_columns, 5)
-        ax.set_title("Parameters")
-        ax.axis('off')
-
-        msg = \
-            "Agent model: {}; \n \n" \
-            "Cognitive parameters: {}; \n \n" \
-            "Repartition of roles: {}; \n \n " \
-            "Economy model: {}; \n \n"\
-            "Trials: {}. \n \n".format(
-                self.parameters["agent_model"].name,
-                self.parameters["cognitive_parameters"],
-                self.parameters["repartition_of_roles"],
-                self.parameters["economy_model"],
-                self.parameters["t_max"]
-            )
-
-        ax.text(0.5, 0.5, msg, ha='center', va='center', size=12)
-
-        plt.savefig(self.main_figure_name)
-
-        plt.close()
-
-    def plot_proportions(self):
-
-        # Container for proportions of agents having this or that in hand according to their type
-        #  - rows: type of agent
-        # - columns: type of good
-
-        fig = plt.figure(figsize=(25, 12))
-        fig.patch.set_facecolor('white')
-
-        n_lines = self.n_goods
-        n_columns = 1
-
-        x = np.arange(len(self.proportions))
-
-        for agent_type in range(self.n_goods):
-
-            # First subplot
-            ax = plt.subplot(n_lines, n_columns, agent_type + 1)
-            ax.set_title("Proportion of agents of type {} having good i in hand\n".format(agent_type))
-
-            y = []
-            for i in range(self.n_goods):
-                y.append([])
-
-            for proportions_at_t in self.proportions:
-                for good in range(self.n_goods):
-                    y[good].append(proportions_at_t[agent_type, good])
-
-            ax.set_ylim([-0.02, 1.02])
-
-            for good in range(self.n_goods):
-                ax.plot(x, y[good], label="Good {}".format(good), linewidth=2)
-
-            ax.legend()
-
-        plt.tight_layout()
-
-        plt.savefig(fname=self.proportions_figure_name)
+    plt.savefig(fname='fig/proportion.pdf')
 
 
-def represent_results(backup, parameters):
-    g = GraphicDesigner(backup=backup, parameters=parameters)
-    g.plot_main_fig()
-    g.plot_proportions()
-
-
-# ------------------------------------------------------------------------------------------------- #
-
-def phase_diagram(backup):
-
-    fixed_good = 'x0'
-    fixed_type_n = backup.repartition[0][0]
-    n = len(backup.repartition)
-    t_max = len(backup.medium[0])
-    n_good = len(backup.repartition[0])
-
-    plot_phase_diagram(
-        medium=backup.medium,
-        repartition=backup.repartition,
-        fixed_good=fixed_good,
-        fixed_type_n=fixed_type_n,
-        n=n,
-        t_max=t_max,
-        n_good=n_good
-    )
-
-    # plot_cognitive_parameters(
-    #     backup=backup,
-    #     repartitions=repartitions,
-    #     cognitive_parameters=cognitive_parameters,
-    #     fixed_good=fixed_good,
-    # )
-
-
-def plot_cognitive_parameters(backup,
-                              repartitions,
-                              cognitive_parameters,
-                              fixed_good,
-                              decision_rule):
-
-    cog_params = {}
-
-    for k in ("alpha", "beta", ("epsilon", "temp")[decision_rule == "softmax"]):
-        cog_params[k] = get_all_economies_for_a_cog_param(
-            backup=backup,
-            repartitions=repartitions,
-            cog_param=k,
-            cognitive_parameters=cognitive_parameters
-        )
-
-    gs = gridspec.GridSpec(1, 3)
-
-    fig = plt.figure(figsize=(10, 10))
-
-    for i, (k, v) in enumerate(cog_params.items()):
-        plot_bar(v, fixed_good, subplot_spec=gs[0, i], fig=fig, title="tau" if k == "temp" else k)
-
-    plt.show()
-
-
-def get_all_economies_for_a_cog_param(backup, cog_param, repartitions, cognitive_parameters):
-
-    """
-    get a dic with key: all possible values for
-    a cognitive parameter
-    and value: all economies using this value
-    """
-
-    econ_for_param_with_value = {}
-
-    for r in repartitions:
-
-        for c in cognitive_parameters:
-
-            value = backup[r][c]["parameters"]["cognitive_parameters"][cog_param]
-
-            if econ_for_param_with_value.get(value):
-                econ_for_param_with_value[value].append(backup[r][c])
-            else:
-                econ_for_param_with_value[value] = []
-                econ_for_param_with_value[value].append(backup[r][c])
-
-    return econ_for_param_with_value
-
-
-def plot_bar(backup, fixed_good, title, subplot_spec=None, fig=None):
-
-    data = np.zeros(len(backup), dtype=float)
-
-    for i, (k, v) in enumerate(sorted(backup.items())):
-
-        d = np.array([
-            is_monetary(
-                    backup=b,
-                    parameters=b["parameters"],
-                    fixed_good=fixed_good
-            )
-            for b in v
-        ])
-
-        data[i] = np.sum(d) / len(d)
+def _bar(means, std, labels, title, subplot_spec=None, fig=None):
 
     if subplot_spec:
         ax = fig.add_subplot(subplot_spec)
@@ -262,10 +142,11 @@ def plot_bar(backup, fixed_good, title, subplot_spec=None, fig=None):
     ax.spines['right'].set_visible(False)
 
     ax.tick_params(length=0)
-    plt.title(f"$\{title}$", fontsize=20)
+    ax.set_title(f"$\{title}$", fontsize=20)
+
+    print(labels)
 
     # Set x labels
-    labels = ["{:.2f}".format(i) for i in sorted(backup.keys())]
     labels_pos = np.arange(len(labels))
     ax.set_xticklabels(labels)
     ax.set_xticks(labels_pos)
@@ -273,40 +154,31 @@ def plot_bar(backup, fixed_good, title, subplot_spec=None, fig=None):
     ax.set_ylim(0, 1)
 
     # create
-    ax.bar(labels_pos, data, edgecolor="white", align="center", color="black")
+    ax.bar(labels_pos, means, yerr=std, edgecolor="white", align="center", color="black")
 
 
-def plot_phase_diagram(medium, repartition, fixed_good, fixed_type_n, n, t_max, n_good):
+def _parameters_plot(data):
 
-    money = np.zeros(n)
+    gs = gridspec.GridSpec(1, 3)
 
-    for i in range(n):
+    fig = plt.figure(figsize=(13, 8))
 
-        money[i] = is_monetary(
-            medium=medium[i],
-            t_max=t_max,
-            fixed_good=fixed_good,
-            n_good=n_good
-        )
+    for i, (k, v) in enumerate(data.items()):
+        _bar(labels=v[0], means=v[1], std=v[2], subplot_spec=gs[0, i], fig=fig, title=k)
 
-    unique_repartition = np.unique(repartition)
+    plt.savefig('fig/parameters.pdf')
 
-    scores = np.array([np.mean([money[i] for i in range(n) if repartition[i] == r]) for r in unique_repartition])
 
-    n_side = int(np.sqrt(len(unique_repartition)))
-
-    data = scores.reshape(n_side, n_side).T
+def _phase_diagram(data, labels, title):
 
     fig, ax = plt.subplots()
 
-    im = ax.imshow(data, cmap="binary", origin="lower")
+    im = ax.imshow(data, cmap="binary", origin="lower", vmin=0.5)
 
     # Create colorbar
     cbar = ax.figure.colorbar(im, ax=ax)
 
-    labels = np.unique([i[1] for i in unique_repartition])
-
-    ticks = np.arange(n_side)
+    ticks = np.arange(len(labels))
 
     ax.set_xticks(ticks)
     ax.set_yticks(ticks)
@@ -314,50 +186,61 @@ def plot_phase_diagram(medium, repartition, fixed_good, fixed_type_n, n, t_max, 
     ax.set_xticklabels(labels)
     ax.set_yticklabels(labels)
 
-    plt.xlabel("x1")
-    plt.ylabel("x2")
+    ax.set_title(title)
 
-    ax.set_title(f"Money emergence with x0 = {fixed_type_n} and good = {fixed_good}")
+    ax.set_xlabel("x1")
+    ax.set_ylabel("x2")
+
     fig.tight_layout()
     os.makedirs('fig', exist_ok=True)
     plt.savefig('fig/phase.pdf')
-    plt.show()
+
+# ------------------------------------------------------------------------------------------------- #
 
 
-def is_monetary(medium, fixed_good, t_max, n_good):
+def run(bkp):
 
-    factor_medium_difference = 2
-    threshold_time_duration = 80
+    fixed_good = 'x0'
+    fixed_type_n = bkp.repartition[0][0]
+    n = len(bkp.repartition)
 
-    good_count = np.zeros(n_good, dtype=int)
+    cog_param = np.array(list(bkp.cognitive_parameters))
 
-    last_good_in_memory = None
+    money = np.array([np.mean(i) for i in bkp.choice])
 
-    for t in range(t_max):
+    #money = np.array([analysis.money.run_with_exchange(bkp.exchange[i], m=0)for i in range(n)])
+    print(money)
 
-        d = np.array(medium[t])
-        idx = np.flatnonzero(d == max(d))
+    unq_repartition = np.unique(bkp.repartition)
+    scores = np.array([np.mean([money[i] for i in range(n) if bkp.repartition[i] == r]) for r in unq_repartition])
 
-        # If there is one max value
-        if len(idx) == 1:
+    labels = np.unique([i[1] for i in unq_repartition])
+    n_side = len(labels)
+    data = scores.reshape(n_side, n_side).T
+    title = f"Money emergence with x0 = {fixed_type_n} and good = {fixed_good}"
 
-            cond0 = last_good_in_memory == idx
+    _phase_diagram(title=title, data=data, labels=labels)
 
-            other_good0, other_good1 = d[d != d[idx]]
-            cond1 = d[idx] > other_good0 * factor_medium_difference
-            cond2 = d[idx] > other_good1 * factor_medium_difference
+    data = {}
+    for i, name in enumerate(("alpha", "beta", "gamma")):
+        unq = np.unique(cog_param[:, i])
 
-            if cond0 and cond1 and cond2:
-                good_count[idx] += 1
-            else:
-                good_count[idx] = 0
+        d = [money[cog_param[:, i] == j] for j in unq]
+        data[name] = ([f'{j:.2f}' for j in unq], [np.mean(j) for j in d], [np.std(j) for j in d])
 
-            last_good_in_memory = idx
-        else:
-            # reset all goods count if max() returns two values
-            good_count[idx] = 0
+    _parameters_plot(data=data)
 
-    cond0 = max(good_count) > threshold_time_duration
-    cond1 = np.argmax(good_count) == fixed_good
 
-    return cond0 and cond1
+def single(bkp):
+
+    _plot_main_fig(
+        medium=bkp['medium'],
+        exchange=bkp['exchange'],
+        consumption_ratio=bkp['consumption_ratio'],
+        repartition=bkp['repartition'],
+        cognitive_parameters=bkp['cognitive_parameters']
+    )
+
+    _plot_proportions(proportion=bkp['proportion'])
+
+

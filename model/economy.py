@@ -2,6 +2,9 @@ import numpy as np
 import itertools as it
 
 
+m = 0
+
+
 class Economy(object):
 
     def __init__(self, repartition, t_max, agent_model, economy_model, cognitive_parameters=None, seed=None):
@@ -33,17 +36,20 @@ class Economy(object):
 
         self.proportions = np.zeros((self.n_goods, self.n_goods))
 
+        self.choice = []
+
         # ---- For final backup ----- #
         self.back_up = {
             'exchange': [],
             'n_exchange': [],
             'consumption_ratio': [],
             'medium': [],
-            'proportion': []
+            'proportion': [],
+            'choice': []
         }
 
         self.markets = self.get_markets(self.n_goods)
-        self.exchange_types = [i for i in it.combinations(range(self.n_goods), r=2)]
+        self.exchange_types = list(it.combinations(range(self.n_goods), r=2))
 
     @staticmethod
     def get_markets(n_goods):
@@ -128,6 +134,12 @@ class Economy(object):
             agent_choice = agent.which_exchange_do_you_want_to_try()
             self.markets[agent_choice].append(agent.idx)
 
+            if m in (agent.P, agent.C):
+                self.choice.append(int(agent_choice == (agent.P, agent.C)))
+
+            else:
+                self.choice.append(int(agent_choice in [(agent.P, m), (m, agent.C)]))
+
         success_idx = []
         for i, j in self.exchange_types:
 
@@ -182,6 +194,7 @@ class Economy(object):
         self.back_up['n_exchange'].append(self.n_exchange)
         self.back_up['medium'].append(self.good_used_as_medium.copy())
         self.back_up['proportion'].append(self.proportions.copy())
+        self.back_up['choice'].append(np.mean(self.choice))
 
     def reinitialize_backup_containers(self):
 
@@ -192,6 +205,7 @@ class Economy(object):
         self.consumption = 0
         self.good_used_as_medium[:] = 0
         self.proportions[:] = 0
+        self.choice = []
 
 
 def launch(**kwargs):

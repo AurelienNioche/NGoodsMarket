@@ -13,6 +13,7 @@ class Data:
 
         self.repartition = np.zeros(n, dtype=object)
         self.cognitive_parameters = np.zeros(n, dtype=object)
+        self.choice = np.zeros(n, dtype=object)
 
         self.i = 0
 
@@ -26,5 +27,7 @@ class Data:
 
         self.repartition[self.i] = param['repartition']
         self.cognitive_parameters[self.i] = param['cognitive_parameters']
+
+        self.choice[self.i] = backup['choice']
 
         self.i += 1

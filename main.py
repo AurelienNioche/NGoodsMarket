@@ -15,15 +15,15 @@ import os
 def get_parameters():
 
     # ----- set these params ------ #
-    x0 = 20
-    range_repartitions = range(10, 40, 5)
+    x0 = 50
+    range_repartitions = range(10, 101, 5)
     step = 3
     alpha_range = np.linspace(0.1, 0.5, step)
-    beta_range = np.linspace(0.5, 1, step)
-    t_max = 2
+    beta_range = np.linspace(0.75, 1.5, step)
+    gamma_range = np.linspace(0.001, 0.15, step)
+    t_max = 100
     economy_model = "prod: i-1"
     agent_model = RLOnAcceptanceAgent
-    gamma_range = np.linspace(0.1, 0.5, step)
 
     # ------------------------------ #
 
@@ -67,7 +67,7 @@ def _produce_data():
 
     data = backup.structure.Data(n=len(param))
 
-    with multiprocessing.Pool(processes=os.cpu_count() - 1) as p:
+    with multiprocessing.Pool(processes=os.cpu_count()) as p:
 
         with tqdm(total=max_) as pbar:
             for pr, b in p.imap_unordered(_run, param):
@@ -80,7 +80,7 @@ def _produce_data():
 def _demo_mode():
 
     parameters = {
-        "repartition_of_roles": [30, 30, 60],
+        "repartition": [30, 30, 60],
         "economy_model": "prod: i-1",
         "agent_model": RLOnAcceptanceAgent,
         "cognitive_parameters": (0.1, 1, 0.1),
@@ -89,8 +89,9 @@ def _demo_mode():
 
     e = Economy(**parameters)
 
-    bkup = e.run()
-    graph.represent_results(bkup, parameters)
+    bkp = e.run()
+    bkp.update(parameters)
+    graph.single(bkp)
 
 
 def _running_mode(args):
@@ -102,7 +103,7 @@ def _running_mode(args):
     else:
         bkp = backup.backup.load("phase.p")
 
-    graph.phase_diagram(bkp)
+    graph.run(bkp)
 
 
 def main(args):
