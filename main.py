@@ -16,7 +16,7 @@ def get_parameters():
 
     # ----- set these params ------ #
     x0 = 50
-    range_repartitions = range(10, 101, 5)
+    range_repartitions = range(10, 101, 15)
     step = 3
     alpha_range = np.linspace(0.1, 0.5, step)
     beta_range = np.linspace(0.75, 1.5, step)

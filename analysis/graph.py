@@ -2,6 +2,8 @@ import numpy as np
 from pylab import plt
 import matplotlib.gridspec as gridspec
 import os
+import ternary.heatmapping
+import itertools
 
 
 import analysis.money
@@ -209,7 +211,6 @@ def run(bkp):
     money = np.array([np.mean(i) for i in bkp.choice])
 
     #money = np.array([analysis.money.run_with_exchange(bkp.exchange[i], m=0)for i in range(n)])
-    print(money)
 
     unq_repartition = np.unique(bkp.repartition)
     scores = np.array([np.mean([money[i] for i in range(n) if bkp.repartition[i] == r]) for r in unq_repartition])
@@ -219,7 +220,27 @@ def run(bkp):
     data = scores.reshape(n_side, n_side).T
     title = f"Money emergence with x0 = {fixed_type_n} and good = {fixed_good}"
 
-    _phase_diagram(title=title, data=data, labels=labels)
+    # _phase_diagram(title=title, data=data, labels=labels)
+
+    fig = plt.figure()
+
+    ax = fig.add_subplot()
+
+    title = "Ternary Money Emergence"
+    labels = np.unique([i[1] for i in unq_repartition])
+    data = {bkp.repartition[i]: scores[i] for i in range(len(scores))}
+    print(data)
+    # data = {(i, j, k): np.random.random() for i, j, k in itertools.product(range(10), repeat=3)}
+
+    scale = max([max(i) for i in data.keys()])
+
+    print(scale)
+
+    ternary.heatmap(data=data, ax=ax, scale=scale)
+
+    plt.show()
+
+    # _ternary_plot(title=title, data=data, labels=labels, scale=scale, ax=ax)
 
     data = {}
     for i, name in enumerate(("alpha", "beta", "gamma")):
@@ -242,5 +263,17 @@ def single(bkp):
     )
 
     _plot_proportions(proportion=bkp['proportion'])
+
+
+# def _ternary_plot(title, data, labels, scale, ax):
+#
+#     # figure, tax = ternary.figure(scale=scale)
+#
+#     # ternary.heatmapping.heatmap(data, ax=ax)
+#
+#     ternary.heatmap(data=data, ax=ax)
+#     #
+    # ternary.title(title)
+
 
 
