@@ -10,4 +10,5 @@ def save(obj, file):
 
 
 def load(file):
+    print(f"Loading file '{file}'...")
     return pickle.load(file=open(f'{folder}/{file}', 'rb'))

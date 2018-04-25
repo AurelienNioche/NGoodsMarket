@@ -202,48 +202,83 @@ def _phase_diagram(data, labels, title):
 
 def run(bkp):
 
-    fixed_good = 'x0'
+    print("Beginning analysis...")
+
+    fixed_good = 0
     fixed_type_n = bkp.repartition[0][0]
     n = len(bkp.repartition)
+
+    n_good = len(bkp.repartition[0])
 
     cog_param = np.array(list(bkp.cognitive_parameters))
 
     money = np.array([np.mean(i) for i in bkp.choice])
 
-    #money = np.array([analysis.money.run_with_exchange(bkp.exchange[i], m=0)for i in range(n)])
-
     unq_repartition = np.unique(bkp.repartition)
+    # money = np.array([analysis.money.run_with_exchange(bkp.exchange[i], m=0)for i in range(n)])
+
     scores = np.array([np.mean([money[i] for i in range(n) if bkp.repartition[i] == r]) for r in unq_repartition])
 
-    labels = np.unique([i[1] for i in unq_repartition])
-    n_side = len(labels)
-    data = scores.reshape(n_side, n_side).T
-    title = f"Money emergence with x0 = {fixed_type_n} and good = {fixed_good}"
+    # ---------------------- #
+    # if n_good == 3:
+    #
+    #     labels = np.unique([i[1] for i in unq_repartition])
+    #     n_side = len(labels)
+    #     data = scores.reshape(n_side, n_side).T
+    #     title = f"Money emergence with x0 = {fixed_type_n} and good = {fixed_good}"
+    #
+    #     _phase_diagram(title=title, data=data, labels=labels)
 
-    # _phase_diagram(title=title, data=data, labels=labels)
+    # ----------------------- #
+    if n_good == 3:
+        fig = plt.figure(figsize=(12, 10))
 
-    fig = plt.figure()
+        ax = fig.add_subplot(111)
 
-    ax = fig.add_subplot()
+        a_unq_repartition = np.array(list(unq_repartition))
 
-    title = "Ternary Money Emergence"
-    labels = np.unique([i[1] for i in unq_repartition])
-    data = {bkp.repartition[i]: scores[i] for i in range(len(scores))}
-    print(data)
-    # data = {(i, j, k): np.random.random() for i, j, k in itertools.product(range(10), repeat=3)}
+        unq_values = np.unique(a_unq_repartition)
 
-    scale = max([max(i) for i in data.keys()])
+        rebased_unq_repartition = a_unq_repartition.copy()
 
-    print(scale)
+        # print(unq_values)
 
-    ternary.heatmap(data=data, ax=ax, scale=scale)
+        for i, v in enumerate(unq_values):
+            rebased_unq_repartition[rebased_unq_repartition == v] = i
 
-    plt.show()
+        # print(np.unique(rebased_unq_repartition))
+        tup_rebased_unq_repartition = np.zeros(len(rebased_unq_repartition), dtype=object)
 
-    # _ternary_plot(title=title, data=data, labels=labels, scale=scale, ax=ax)
+        for i, v in enumerate(rebased_unq_repartition):
+            tup_rebased_unq_repartition[i] = tuple(v)
+
+        # labels = np.unique([i[1] for i in unq_repartition])
+        data = {tup_rebased_unq_repartition[i]: scores[i] for i in range(len(scores))}
+        # print(data)
+        # data = {(i, j, k): np.random.random() for i, j, k in itertools.product(range(10), repeat=3)}
+        tfg, tax = ternary.figure(ax=ax, scale=len(unq_values) - 1)
+
+
+        tax.heatmap(data=data, style="triangular")
+        tax.boundary()
+        tax.ticks(clockwise=True, ticks=list(unq_values))
+
+        tax.left_axis_label("$x_1$", fontsize=20)#, offset=0.16)
+        tax.right_axis_label("$x_2$", fontsize=20)#, offset=0.16)
+        tax.bottom_axis_label("$x_3$", fontsize=20)#, offset=0.06)
+        tax.set_title("ta mere")
+
+        tax._redraw_labels()
+
+        ax.set_axis_off()
+        ax.set_aspect(1)
+
+        plt.savefig("fig/ternary.pdf")
+
+    # ------------------------- #
 
     data = {}
-    for i, name in enumerate(("alpha", "beta", "gamma")):
+    for i, name in enumerate(("alpha", "beta", "epsilon")):
         unq = np.unique(cog_param[:, i])
 
         d = [money[cog_param[:, i] == j] for j in unq]
