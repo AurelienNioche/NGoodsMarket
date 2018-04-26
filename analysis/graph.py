@@ -146,7 +146,7 @@ def _bar(means, std, labels, title, subplot_spec=None, fig=None):
     ax.tick_params(length=0)
     ax.set_title(f"$\{title}$", fontsize=20)
 
-    print(labels)
+    # print(labels)
 
     # Set x labels
     labels_pos = np.arange(len(labels))
@@ -175,7 +175,7 @@ def _phase_diagram(data, labels, title):
 
     fig, ax = plt.subplots()
 
-    im = ax.imshow(data, cmap="binary", origin="lower", vmin=0.5)
+    im = ax.imshow(data, cmap="binary", origin="lower")#, vmin=0.5)
 
     # Create colorbar
     cbar = ax.figure.colorbar(im, ax=ax)
@@ -197,6 +197,46 @@ def _phase_diagram(data, labels, title):
     os.makedirs('fig', exist_ok=True)
     plt.savefig('fig/phase.pdf')
 
+
+def _ternary_plot(points, values):
+
+    fig = plt.figure(figsize=(12, 10))
+
+    ax = fig.add_subplot(111)
+
+    # Array of dimension n * 3
+    points = np.array(list(points))
+
+    unq_points = np.unique(points)
+
+    for i, v in enumerate(unq_points):
+        points[points == v] = i
+
+    tup_points = np.zeros(len(points), dtype=object)
+
+    for i, v in enumerate(points):
+        tup_points[i] = tuple(v)
+
+    data = {tup_points[i]: values[i] for i in range(len(values))}
+
+    # data = {(i, j, k): np.random.random() for i, j, k in itertools.product(range(10), repeat=3)}
+    tfg, tax = ternary.figure(ax=ax, scale=len(unq_points) - 1)
+
+    tax.heatmap(data=data, style="triangular")
+    tax.boundary()
+    tax.ticks(clockwise=True, ticks=list(unq_points))
+
+    tax.left_axis_label("$x_1$", fontsize=20)  # , offset=0.16)
+    tax.right_axis_label("$x_2$", fontsize=20)  # , offset=0.16)
+    tax.bottom_axis_label("$x_3$", fontsize=20)  # , offset=0.06)
+
+    tax._redraw_labels()
+
+    ax.set_axis_off()
+    ax.set_aspect(1)
+
+    plt.savefig("fig/ternary.pdf")
+
 # ------------------------------------------------------------------------------------------------- #
 
 
@@ -208,71 +248,37 @@ def run(bkp):
     fixed_type_n = bkp.repartition[0][0]
     n = len(bkp.repartition)
 
-    n_good = len(bkp.repartition[0])
+    # n_good = len(bkp.repartition[0])
 
     cog_param = np.array(list(bkp.cognitive_parameters))
 
     money = np.array([np.mean(i) for i in bkp.choice])
 
     unq_repartition = np.unique(bkp.repartition)
+    # print(unq_repartition)
     # money = np.array([analysis.money.run_with_exchange(bkp.exchange[i], m=0)for i in range(n)])
 
     scores = np.array([np.mean([money[i] for i in range(n) if bkp.repartition[i] == r]) for r in unq_repartition])
 
     # ---------------------- #
-    if n_good == 3:
+    # if n_good == 3:
 
-        labels = np.unique([i[1] for i in unq_repartition])
-        n_side = len(labels)
-        data = scores.reshape(n_side, n_side).T
-        title = f"Money emergence with x0 = {fixed_type_n} and good = {fixed_good}"
+    labels = np.unique([i[-1] for i in unq_repartition])
+    n_side = len(labels)
+    data = scores.reshape(n_side, n_side).T
+    title = f"Money emergence with x0 = {fixed_type_n} and good = {fixed_good}"
 
-        _phase_diagram(title=title, data=data, labels=labels)
+    _phase_diagram(title=title, data=data, labels=labels)
 
     # ----------------------- #
-    if n_good == 4:
-        fig = plt.figure(figsize=(12, 10))
 
-        ax = fig.add_subplot(111)
-
-        a_unq_repartition = np.array(list(unq_repartition))
-
-        unq_values = np.unique(a_unq_repartition)
-
-        rebased_unq_repartition = a_unq_repartition.copy()
-
-        # print(unq_values)
-
-        for i, v in enumerate(unq_values):
-            rebased_unq_repartition[rebased_unq_repartition == v] = i
-
-        # print(np.unique(rebased_unq_repartition))
-        tup_rebased_unq_repartition = np.zeros(len(rebased_unq_repartition), dtype=object)
-
-        for i, v in enumerate(rebased_unq_repartition):
-            tup_rebased_unq_repartition[i] = tuple(v)
-
-        # labels = np.unique([i[1] for i in unq_repartition])
-        data = {tup_rebased_unq_repartition[i]: scores[i] for i in range(len(scores))}
-        # print(data)
-        # data = {(i, j, k): np.random.random() for i, j, k in itertools.product(range(10), repeat=3)}
-        tfg, tax = ternary.figure(ax=ax, scale=len(unq_values) - 1)
-
-        tax.heatmap(data=data, style="triangular")
-        tax.boundary()
-        tax.ticks(clockwise=True, ticks=list(unq_values))
-
-        tax.left_axis_label("$x_1$", fontsize=20)#, offset=0.16)
-        tax.right_axis_label("$x_2$", fontsize=20)#, offset=0.16)
-        tax.bottom_axis_label("$x_3$", fontsize=20)#, offset=0.06)
-        tax.set_title("ta mere")
-
-        tax._redraw_labels()
-
-        ax.set_axis_off()
-        ax.set_aspect(1)
-
-        plt.savefig("fig/ternary.pdf")
+    # print(n_good)
+    # if n_good == 4:
+    #
+    #     a_unq_repartition = np.array(list(unq_repartition))
+    #     a_unq_repartition = a_unq_repartition[:, 1:]  # Remove constant
+    #
+    #     _ternary_plot(points=a_unq_repartition, values=scores)
 
     # ------------------------- #
 

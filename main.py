@@ -15,8 +15,8 @@ import os
 def get_parameters():
 
     # ----- set these params ------ #
-    x0 = 50
-    range_repartitions = range(10, 201, 5)
+    fixed_x = (50, 50)
+    range_repartition = range(10, 200, 20)
     step = 3
     alpha_range = np.linspace(0.1, 0.5, step)
     beta_range = np.linspace(0.75, 1.5, step)
@@ -25,11 +25,11 @@ def get_parameters():
     economy_model = "prod: i-1"
     agent_model = RLOnAcceptanceAgent
 
-    n_good = 3
+    n_good = 4
 
     # ------------------------------ #
 
-    repartition = list(itertools.product(range_repartitions, repeat=n_good))
+    repartition = list(itertools.product(range_repartition, repeat=n_good-len(fixed_x)))
 
     # ---------- #
 
@@ -42,7 +42,7 @@ def get_parameters():
     for alpha, beta, gamma, rpt in var_param:
         param = {
             "cognitive_parameters": (alpha, beta, gamma),
-            "repartition": (x0, ) + rpt,
+            "repartition": fixed_x + rpt,
             "t_max": t_max,
             "economy_model": economy_model,
             "agent_model": agent_model,
