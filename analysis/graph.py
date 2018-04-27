@@ -2,11 +2,10 @@ import numpy as np
 from pylab import plt
 import matplotlib.gridspec as gridspec
 import os
-import ternary.heatmapping
-import itertools
+# import ternary.heatmapping
+# import itertools
 
-
-import analysis.money
+# import analysis.money
 
 
 def get_new_fig_name(fig_name):
@@ -159,7 +158,7 @@ def _bar(means, std, labels, title, subplot_spec=None, fig=None):
     ax.bar(labels_pos, means, yerr=std, edgecolor="white", align="center", color="black")
 
 
-def _parameters_plot(data):
+def _parameters_plot(data, n_good):
 
     gs = gridspec.GridSpec(1, 3)
 
@@ -168,10 +167,10 @@ def _parameters_plot(data):
     for i, (k, v) in enumerate(data.items()):
         _bar(labels=v[0], means=v[1], std=v[2], subplot_spec=gs[0, i], fig=fig, title=k)
 
-    plt.savefig('fig/parameters.pdf')
+    plt.savefig(f'fig/parameters_{n_good}.pdf')
 
 
-def _phase_diagram(data, labels, title):
+def _phase_diagram(data, labels, title, n_good):
 
     fig, ax = plt.subplots()
 
@@ -190,52 +189,52 @@ def _phase_diagram(data, labels, title):
 
     ax.set_title(title)
 
-    ax.set_xlabel("x1")
-    ax.set_ylabel("x2")
+    ax.set_xlabel(f'$x_{n_good-2}$')
+    ax.set_ylabel(f'$x_{n_good-1}$')
 
     fig.tight_layout()
     os.makedirs('fig', exist_ok=True)
-    plt.savefig('fig/phase.pdf')
+    plt.savefig(f'fig/phase_{n_good}.pdf')
 
 
-def _ternary_plot(points, values):
-
-    fig = plt.figure(figsize=(12, 10))
-
-    ax = fig.add_subplot(111)
-
-    # Array of dimension n * 3
-    points = np.array(list(points))
-
-    unq_points = np.unique(points)
-
-    for i, v in enumerate(unq_points):
-        points[points == v] = i
-
-    tup_points = np.zeros(len(points), dtype=object)
-
-    for i, v in enumerate(points):
-        tup_points[i] = tuple(v)
-
-    data = {tup_points[i]: values[i] for i in range(len(values))}
-
-    # data = {(i, j, k): np.random.random() for i, j, k in itertools.product(range(10), repeat=3)}
-    tfg, tax = ternary.figure(ax=ax, scale=len(unq_points) - 1)
-
-    tax.heatmap(data=data, style="triangular")
-    tax.boundary()
-    tax.ticks(clockwise=True, ticks=list(unq_points))
-
-    tax.left_axis_label("$x_1$", fontsize=20)  # , offset=0.16)
-    tax.right_axis_label("$x_2$", fontsize=20)  # , offset=0.16)
-    tax.bottom_axis_label("$x_3$", fontsize=20)  # , offset=0.06)
-
-    tax._redraw_labels()
-
-    ax.set_axis_off()
-    ax.set_aspect(1)
-
-    plt.savefig("fig/ternary.pdf")
+# def _ternary_plot(points, values):
+#
+#     fig = plt.figure(figsize=(12, 10))
+#
+#     ax = fig.add_subplot(111)
+#
+#     # Array of dimension n * 3
+#     points = np.array(list(points))
+#
+#     unq_points = np.unique(points)
+#
+#     for i, v in enumerate(unq_points):
+#         points[points == v] = i
+#
+#     tup_points = np.zeros(len(points), dtype=object)
+#
+#     for i, v in enumerate(points):
+#         tup_points[i] = tuple(v)
+#
+#     data = {tup_points[i]: values[i] for i in range(len(values))}
+#
+#     # data = {(i, j, k): np.random.random() for i, j, k in itertools.product(range(10), repeat=3)}
+#     tfg, tax = ternary.figure(ax=ax, scale=len(unq_points) - 1)
+#
+#     tax.heatmap(data=data, style="triangular")
+#     tax.boundary()
+#     tax.ticks(clockwise=True, ticks=list(unq_points))
+#
+#     tax.left_axis_label("$x_1$", fontsize=20)  # , offset=0.16)
+#     tax.right_axis_label("$x_2$", fontsize=20)  # , offset=0.16)
+#     tax.bottom_axis_label("$x_3$", fontsize=20)  # , offset=0.06)
+#
+#     tax._redraw_labels()
+#
+#     ax.set_axis_off()
+#     ax.set_aspect(1)
+#
+#     plt.savefig("fig/ternary.pdf")
 
 # ------------------------------------------------------------------------------------------------- #
 
@@ -244,31 +243,34 @@ def run(bkp):
 
     print("Beginning analysis...")
 
-    fixed_good = 0
+    m = 0
+
+    n_good = len(bkp.repartition[0])
+
     fixed_type_n = bkp.repartition[0][0]
     n = len(bkp.repartition)
-
-    # n_good = len(bkp.repartition[0])
 
     cog_param = np.array(list(bkp.cognitive_parameters))
 
     money = np.array([np.mean(i) for i in bkp.choice])
-
-    unq_repartition = np.unique(bkp.repartition)
-    # print(unq_repartition)
     # money = np.array([analysis.money.run_with_exchange(bkp.exchange[i], m=0)for i in range(n)])
 
-    scores = np.array([np.mean([money[i] for i in range(n) if bkp.repartition[i] == r]) for r in unq_repartition])
+    unq_repartition = np.unique(bkp.repartition)
 
-    # ---------------------- #
-    # if n_good == 3:
+    scores = np.array([np.mean([money[i] for i in range(n) if bkp.repartition[i] == r]) for r in unq_repartition])
 
     labels = np.unique([i[-1] for i in unq_repartition])
     n_side = len(labels)
     data = scores.reshape(n_side, n_side).T
-    title = f"Money emergence with x0 = {fixed_type_n} and good = {fixed_good}"
 
-    _phase_diagram(title=title, data=data, labels=labels)
+    if n_good == 3:
+        title = f'Money emergence with $x_0 = {fixed_type_n}$ and $m = {m}$'
+    elif n_good == 4:
+        title = f'Money emergence with $x_0, x_1 = {fixed_type_n}$ and $m = {m}$'
+    else:
+        title = f'Money emergence with $m = {m}$'
+
+    _phase_diagram(title=title, data=data, labels=labels, n_good=n_good)
 
     # ----------------------- #
 
@@ -289,7 +291,7 @@ def run(bkp):
         d = [money[cog_param[:, i] == j] for j in unq]
         data[name] = ([f'{j:.2f}' for j in unq], [np.mean(j) for j in d], [np.std(j) for j in d])
 
-    _parameters_plot(data=data)
+    _parameters_plot(data=data, n_good=n_good)
 
 
 def single(bkp):
@@ -303,17 +305,3 @@ def single(bkp):
     )
 
     _plot_proportions(proportion=bkp['proportion'])
-
-
-# def _ternary_plot(title, data, labels, scale, ax):
-#
-#     # figure, tax = ternary.figure(scale=scale)
-#
-#     # ternary.heatmapping.heatmap(data, ax=ax)
-#
-#     ternary.heatmap(data=data, ax=ax)
-#     #
-    # ternary.title(title)
-
-
-

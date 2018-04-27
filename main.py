@@ -12,10 +12,10 @@ import multiprocessing
 import os
 
 
-def get_parameters():
+def get_parameters(n_good):
 
     # ----- set these params ------ #
-    fixed_x = (50, 50)
+    fixed_x = (50, ) * (1 if n_good == 3 else 2)
     range_repartition = range(10, 200, 20)
     step = 3
     alpha_range = np.linspace(0.1, 0.5, step)
@@ -24,8 +24,6 @@ def get_parameters():
     t_max = 100
     economy_model = "prod: i-1"
     agent_model = RLOnAcceptanceAgent
-
-    n_good = 4
 
     # ------------------------------ #
 
@@ -59,11 +57,11 @@ def _run(param):
     return param, e.run()
 
 
-def _produce_data():
+def _produce_data(n_good):
 
     tqdm.write("Run simulations.")
 
-    param = get_parameters()
+    param = get_parameters(n_good)
 
     max_ = len(param)
 
@@ -79,14 +77,14 @@ def _produce_data():
     return data
 
 
-def _demo_mode():
+def _demo_mode(args):
 
     parameters = {
-        "repartition": [30, 30, 60],
+        "repartition": [30, 30, 60] + [60, ] * (args.n - 3),
         "economy_model": "prod: i-1",
         "agent_model": RLOnAcceptanceAgent,
         "cognitive_parameters": (0.1, 1, 0.1),
-        "t_max": 200,
+        "t_max": 100,
     }
 
     e = Economy(**parameters)
@@ -98,20 +96,25 @@ def _demo_mode():
 
 def _running_mode(args):
 
-    if args.force or not os.path.exists("data/phase.p"):
-        bkp = _produce_data()
-        backup.backup.save(obj=bkp, file="phase.p")
+    data_file = f'data/phase_{args.n_good}.p'
+
+    if args.force or not os.path.exists(data_file):
+        bkp = _produce_data(args.n_good)
+        backup.backup.save(obj=bkp, file_name=data_file)
 
     else:
-        bkp = backup.backup.load("phase.p")
+        bkp = backup.backup.load(data_file)
 
     graph.run(bkp)
 
 
 def main(args):
 
-    if args.demo:
-        _demo_mode()
+    if args.n_good < 3:
+        raise Exception("Number of goods has to be greater than 3.")
+
+    elif args.demo:
+        _demo_mode(args)
 
     else:
         _running_mode(args)
@@ -126,6 +129,9 @@ if __name__ == "__main__":
 
     parser.add_argument('-f', '--force', action="store_true", default=False,
                         help="Force creation of new data.")
+
+    parser.add_argument('-n', '--n_good', action="store", default=3, type=int,
+                        help="How many goods do you want (default = 3).")
 
     parsed_args = parser.parse_args()
 
