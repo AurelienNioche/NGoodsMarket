@@ -36,7 +36,8 @@ class Economy(object):
 
         self.proportions = np.zeros((self.n_goods, self.n_goods))
 
-        self.choice = []
+        # Container for 'monetary compliant' choices
+        self.choice = [[] for _ in range(self.n_goods)]
 
         # ---- For final backup ----- #
         self.back_up = {
@@ -135,10 +136,12 @@ class Economy(object):
             self.markets[agent_choice].append(agent.idx)
 
             if m in (agent.P, agent.C):
-                self.choice.append(int(agent_choice == (agent.P, agent.C)))
+                monetary_conform = agent_choice == (agent.P, agent.C)
 
             else:
-                self.choice.append(int(agent_choice in [(agent.P, m), (m, agent.C)]))
+                monetary_conform = agent_choice in [(agent.P, m), (m, agent.C)]
+
+            self.choice[agent.C].append(int(monetary_conform))
 
         success_idx = []
         for i, j in self.exchange_types:
@@ -159,7 +162,6 @@ class Economy(object):
             agent.proceed_to_exchange()
             # --- Stat
             if agent.attempted_exchange[0] != agent.P and agent.attempted_exchange[1] == agent.C:
-
                 self.good_used_as_medium[agent.attempted_exchange[0]] += 1
 
     def compute_proportions(self):
@@ -194,7 +196,8 @@ class Economy(object):
         self.back_up['n_exchange'].append(self.n_exchange)
         self.back_up['medium'].append(self.good_used_as_medium.copy())
         self.back_up['proportion'].append(self.proportions.copy())
-        self.back_up['choice'].append(np.mean(self.choice))
+
+        self.back_up['choice'].append([np.mean(i) for i in self.choice])
 
     def reinitialize_backup_containers(self):
 
@@ -205,7 +208,7 @@ class Economy(object):
         self.consumption = 0
         self.good_used_as_medium[:] = 0
         self.proportions[:] = 0
-        self.choice = []
+        self.choice = [[] for _ in range(self.n_goods)]
 
 
 def launch(**kwargs):

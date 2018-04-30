@@ -5,7 +5,7 @@ import os
 # import ternary.heatmapping
 # import itertools
 
-# import analysis.money
+import analysis.money
 
 
 def get_new_fig_name(fig_name):
@@ -252,7 +252,7 @@ def run(bkp):
 
     cog_param = np.array(list(bkp.cognitive_parameters))
 
-    money = np.array([np.mean(i) for i in bkp.choice])
+    money = np.array([analysis.money.run_with_monetary_choice(bkp.choice[i]) for i in range(n)])
     # money = np.array([analysis.money.run_with_exchange(bkp.exchange[i], m=0)for i in range(n)])
 
     unq_repartition = np.unique(bkp.repartition)

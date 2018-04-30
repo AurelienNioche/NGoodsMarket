@@ -80,7 +80,7 @@ def _produce_data(n_good):
 def _demo_mode(args):
 
     parameters = {
-        "repartition": [30, 30, 60] + [60, ] * (args.n - 3),
+        "repartition": [30, 30, 60] + [60, ] * (args.n_good - 3),
         "economy_model": "prod: i-1",
         "agent_model": RLOnAcceptanceAgent,
         "cognitive_parameters": (0.1, 1, 0.1),
