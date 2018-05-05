@@ -1,11 +1,9 @@
 import numpy as np
 from pylab import plt
-import matplotlib.gridspec as gridspec
+import matplotlib.gridspec as grd
 import os
 # import ternary.heatmapping
 # import itertools
-
-import analysis.money
 
 
 def get_new_fig_name(fig_name):
@@ -126,7 +124,7 @@ def _plot_proportions(proportion):
 
         ax.legend()
 
-    plt.tight_layout()
+    # plt.tight_layout()
 
     plt.savefig(fname='fig/proportion.pdf')
 
@@ -160,7 +158,7 @@ def _bar(means, std, labels, title, subplot_spec=None, fig=None):
 
 def _parameters_plot(data, n_good):
 
-    gs = gridspec.GridSpec(1, 3)
+    gs = grd.GridSpec(1, 3)
 
     fig = plt.figure(figsize=(13, 8))
 
@@ -170,31 +168,125 @@ def _parameters_plot(data, n_good):
     plt.savefig(f'fig/parameters_{n_good}.pdf')
 
 
-def _phase_diagram(data, labels, title, n_good):
+def phase_diagram(data, labels, n_good,  title=None, ax=None, letter=None, n_ticks=3):
 
-    fig, ax = plt.subplots()
+    if ax is None:
+        print('No ax given, I will create a fig.')
+        fig, ax = plt.subplots()
 
-    im = ax.imshow(data, cmap="binary", origin="lower")#, vmin=0.5)
+    im = ax.imshow(data, cmap="binary", origin="lower", vmin=0.2, vmax=0.8) #, vmin=0.5)
 
     # Create colorbar
     cbar = ax.figure.colorbar(im, ax=ax)
 
-    ticks = np.arange(len(labels))
+    step = int(len(labels)/n_ticks)
+    lab_to_display = labels[::step]
+
+    ax.set_xticklabels(lab_to_display)
+    ax.set_yticklabels(lab_to_display)
+
+    ticks = list(range(len(labels)))[::step]
 
     ax.set_xticks(ticks)
     ax.set_yticks(ticks)
 
-    ax.set_xticklabels(labels)
-    ax.set_yticklabels(labels)
-
-    ax.set_title(title)
+    ax.tick_params(labelsize=8)
 
     ax.set_xlabel(f'$x_{n_good-2}$')
     ax.set_ylabel(f'$x_{n_good-1}$')
 
-    fig.tight_layout()
-    os.makedirs('fig', exist_ok=True)
-    plt.savefig(f'fig/phase_{n_good}.pdf')
+    ax.set_aspect(1)
+
+    if title is not None:
+        ax.set_title(title)
+
+    if letter:
+        ax.text(
+            s=letter, x=-0.1, y=-0.1, horizontalalignment='center', verticalalignment='center',
+            transform=ax.transAxes,
+            fontsize=20)
+
+    if 'fig' in locals():
+        print('Saving fig.')
+        # noinspection PyUnboundLocalVariable
+        fig.tight_layout()
+        os.makedirs('fig', exist_ok=True)
+        plt.savefig(f'fig/phase_{n_good}.pdf')
+
+
+def monetary_behavior_against_time(data, fig, subplot_spec=None, letter=None):
+
+    # ax2 = ax.add_subplot(111)
+
+    n_good = len(data)
+    colors = [f'C{i}' for i in range(n_good)]
+
+    gs = grd.GridSpecFromSubplotSpec(subplot_spec=subplot_spec, ncols=1, nrows=n_good) #hspace=0.2)
+
+    for i in range(n_good):
+
+        ax = fig.add_subplot(gs[i, 0])
+        ax.plot(data[i], color=colors[i], linewidth=2)
+        ax.set_yticks([0, 1])
+        ax.set_ylim(0, 1)
+        ax.set_ylabel("\n")
+
+        ax.axhline(y=1 / (n_good - 1), linewidth=1, linestyle='--', color='0.5', zorder=-10)
+
+        if i == (n_good - 1):
+            ax.set_xlabel('$t$')
+            ax.set_xticks([0, 50, 100])
+        else:
+            ax.set_xticks([])
+
+        ax.tick_params(labelsize=8)
+
+    ax0 = fig.add_subplot(gs[:, :])
+    ax0.set_axis_off()
+
+    ax0.text(s="Monetary behavior", x=-0.1, y=0.5, horizontalalignment='center', verticalalignment='center',
+             transform=ax0.transAxes, fontsize=10, rotation='vertical')
+
+    if letter:
+        ax0.text(
+            s=letter, x=-0.1, y=-0.1, horizontalalignment='center', verticalalignment='center',
+            transform=ax0.transAxes,
+            fontsize=20)
+
+
+def money_bar_plots(means, std, labels, ax=None, letter=None):
+
+    if ax is None:
+        print('No ax given, I will create a fig.')
+        fig, ax = plt.subplots()
+
+    if letter:
+        ax.text(
+            s=letter, x=-0.1, y=-0.68, horizontalalignment='center', verticalalignment='center',
+            transform=ax.transAxes,
+            fontsize=20)
+
+    # Hide spines
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+    ax.tick_params(axis='y', labelsize=8)
+    ax.tick_params(axis='x', length=0)
+
+    # print(labels)
+
+    # Set x labels
+    labels_pos = np.arange(len(labels))
+    ax.set_xticklabels(labels, rotation='vertical')
+    ax.set_xticks(labels_pos)
+
+    ax.set_ylim(0, 1)
+    ax.set_yticks((0, 0.5, 1))
+
+    ax.set_ylabel("Monetary behavior")
+
+    # create
+    ax.bar(labels_pos, means, yerr=std, edgecolor="white", align="center", color="black")
 
 
 # def _ternary_plot(points, values):
@@ -252,7 +344,7 @@ def run(bkp):
 
     cog_param = np.array(list(bkp.cognitive_parameters))
 
-    money = np.array([analysis.money.run_with_monetary_choice(bkp.choice[i]) for i in range(n)])
+    money = np.array([np.mean(bkp.choice[i]) for i in range(n)])
     # money = np.array([analysis.money.run_with_exchange(bkp.exchange[i], m=0)for i in range(n)])
 
     unq_repartition = np.unique(bkp.repartition)
@@ -270,7 +362,7 @@ def run(bkp):
     else:
         title = f'Money emergence with $m = {m}$'
 
-    _phase_diagram(title=title, data=data, labels=labels, n_good=n_good)
+    phase_diagram(title=title, data=data, labels=labels, n_good=n_good)
 
     # ----------------------- #
 

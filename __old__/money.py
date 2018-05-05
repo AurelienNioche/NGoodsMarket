@@ -60,25 +60,3 @@ def run_with_exchange(exchange, m):
                 score -= v
 
     return score
-
-
-def run_with_monetary_choice(choice):
-
-    return np.mean(choice)
-
-    # print(len(choice))
-    # print(repartition)
-    #
-    # n_good = len(repartition)
-    #
-    # r = np.zeros(n_good)
-    #
-    # idx = 0
-    #
-    # for i in range(n_good):
-    #
-    #     sup = idx + repartition[i]
-    #     r[i] = np.mean(choice[idx, idx:sup])
-    #
-    #     idx = sup
-

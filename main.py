@@ -16,7 +16,7 @@ def get_parameters(n_good):
 
     # ----- set these params ------ #
     fixed_x = (50, ) * (1 if n_good == 3 else 2)
-    range_repartition = range(10, 200, 20)
+    range_repartition = range(10, 200, 1)
     step = 3
     alpha_range = np.linspace(0.1, 0.5, step)
     beta_range = np.linspace(0.75, 1.5, step)
@@ -77,35 +77,45 @@ def _produce_data(n_good):
     return data
 
 
-def _demo_mode(args):
+def get_single_data(n_good, force=False, equal_repartition=False):
 
-    parameters = {
-        "repartition": [30, 30, 60] + [60, ] * (args.n_good - 3),
-        "economy_model": "prod: i-1",
-        "agent_model": RLOnAcceptanceAgent,
-        "cognitive_parameters": (0.1, 1, 0.1),
-        "t_max": 100,
-    }
+    data_file = f'data/single_{n_good}_{"equal" if equal_repartition else "not_equal"}.p'
 
-    e = Economy(**parameters)
+    if force or not os.path.exists(data_file):
 
-    bkp = e.run()
-    bkp.update(parameters)
-    graph.single(bkp)
+        x, y = (10, 10) if equal_repartition else (10, 20)
+        parameters = {
+            "repartition": [x, ] * 2 + [y, ] * (n_good - 2),
+            "economy_model": "prod: i-1",
+            "agent_model": RLOnAcceptanceAgent,
+            "cognitive_parameters": (0.1, 1, 0.1),
+            "t_max": 100,
+        }
 
+        e = Economy(**parameters)
 
-def _running_mode(args):
-
-    data_file = f'data/phase_{args.n_good}.p'
-
-    if args.force or not os.path.exists(data_file):
-        bkp = _produce_data(args.n_good)
+        bkp = e.run()
+        bkp.update(parameters)
         backup.backup.save(obj=bkp, file_name=data_file)
 
     else:
         bkp = backup.backup.load(data_file)
 
-    graph.run(bkp)
+    return bkp
+
+
+def get_pool_data(n_good, force=False):
+
+    data_file = f'data/phase_{n_good}.p'
+
+    if force or not os.path.exists(data_file):
+        bkp = _produce_data(n_good)
+        backup.backup.save(obj=bkp, file_name=data_file)
+
+    else:
+        bkp = backup.backup.load(data_file)
+
+    return bkp
 
 
 def main(args):
@@ -114,10 +124,12 @@ def main(args):
         raise Exception("Number of goods has to be greater than 3.")
 
     elif args.demo:
-        _demo_mode(args)
+        bkp = get_single_data(n_good=args.n_good, force=args.force)
+        graph.single(bkp)
 
     else:
-        _running_mode(args)
+        bkp = get_pool_data(n_good=args.n_good, force=args.force)
+        graph.run(bkp)
 
 
 if __name__ == "__main__":
