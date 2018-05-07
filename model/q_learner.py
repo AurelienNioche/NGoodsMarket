@@ -1,9 +1,5 @@
 import numpy as np
-import itertools as it
-import math
 from model.stupid_agent import StupidAgent
-from model.get_paths import get_paths
-# from model.utils import softmax
 
 np.seterr(all='raise')
 

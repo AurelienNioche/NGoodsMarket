@@ -24,13 +24,10 @@ def array_summing_to_s(s, n):
     return out
 
 
-def softmax(x, temp):
-    return np.exp(x / temp) / np.sum(np.exp(x / temp))
-
-
 def main():
 
     print(array_summing_to_s(s=10, n=3))
+
 
 if __name__ == "__main__":
 

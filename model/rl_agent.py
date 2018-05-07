@@ -3,7 +3,6 @@ import itertools as it
 import math
 from model.stupid_agent import StupidAgent
 from model.get_paths import get_paths
-# from model.utils import softmax
 
 np.seterr(all='raise')
 
@@ -61,13 +60,6 @@ class RLOnAcceptanceAgent(StupidAgent):
             values.append(value)
 
         return self.epsilon_rule(values, exchanges)
-
-    # def softmax_rule(self, values, exchanges):
-    #
-    #     p = softmax(np.array(values), temp=self.temp)
-    #     self.attempted_exchange = exchanges[np.random.choice(range(len(exchanges)), p=p)]
-    #
-    #     return self.attempted_exchange
 
     def epsilon_rule(self, values, exchanges):
 
