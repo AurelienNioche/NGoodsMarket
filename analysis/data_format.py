@@ -19,7 +19,7 @@ def for_phase_diagram(bkp):
     return scores.reshape(n_side, n_side).T, labels
 
 
-def for_monetary_behavior_against_time(bkp):
+def for_monetary_behavior_over_t(bkp):
 
     n = len(bkp['repartition'])
     t_max = len(bkp['choice'])
@@ -30,6 +30,23 @@ def for_monetary_behavior_against_time(bkp):
 
         for i in range(n):
             y[i, t] = bkp['choice'][t][i]
+
+    return y
+
+
+def for_medium_over_t(bkp):
+
+    n = len(bkp['repartition'])
+    t_max = len(bkp['medium'])
+
+    ref = np.sum(bkp['repartition']) / n
+
+    y = np.zeros((n, t_max))
+
+    for t in range(t_max):
+
+        for i in range(n):
+            y[i, t] = bkp['medium'][t][i] / ref
 
     return y
 

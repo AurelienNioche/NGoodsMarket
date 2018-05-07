@@ -202,7 +202,7 @@ def phase_diagram(data, labels, n_good,  title=None, ax=None, letter=None, n_tic
 
     if letter:
         ax.text(
-            s=letter, x=-0.1, y=-0.1, horizontalalignment='center', verticalalignment='center',
+            s=letter, x=-0.1, y=-0.2, horizontalalignment='center', verticalalignment='center',
             transform=ax.transAxes,
             fontsize=20)
 
@@ -214,14 +214,14 @@ def phase_diagram(data, labels, n_good,  title=None, ax=None, letter=None, n_tic
         plt.savefig(f'fig/phase_{n_good}.pdf')
 
 
-def monetary_behavior_against_time(data, fig, subplot_spec=None, letter=None):
+def monetary_behavior_over_t(data, fig, subplot_spec, letter=None):
 
     # ax2 = ax.add_subplot(111)
 
     n_good = len(data)
     colors = [f'C{i}' for i in range(n_good)]
 
-    gs = grd.GridSpecFromSubplotSpec(subplot_spec=subplot_spec, ncols=1, nrows=n_good) #hspace=0.2)
+    gs = grd.GridSpecFromSubplotSpec(subplot_spec=subplot_spec, ncols=1, nrows=n_good)
 
     for i in range(n_good):
 
@@ -229,7 +229,7 @@ def monetary_behavior_against_time(data, fig, subplot_spec=None, letter=None):
         ax.plot(data[i], color=colors[i], linewidth=2)
         ax.set_yticks([0, 1])
         ax.set_ylim(0, 1)
-        ax.set_ylabel("\n")
+        # ax.set_ylabel("\n")
 
         ax.axhline(y=1 / (n_good - 1), linewidth=1, linestyle='--', color='0.5', zorder=-10)
 
@@ -244,7 +244,46 @@ def monetary_behavior_against_time(data, fig, subplot_spec=None, letter=None):
     ax0 = fig.add_subplot(gs[:, :])
     ax0.set_axis_off()
 
-    ax0.text(s="Monetary behavior", x=-0.1, y=0.5, horizontalalignment='center', verticalalignment='center',
+    ax0.text(s="Monetary behavior", x=-0.15, y=0.5, horizontalalignment='center', verticalalignment='center',
+             transform=ax0.transAxes, fontsize=10, rotation='vertical')
+
+    if letter:
+        ax0.text(
+            s=letter, x=-0.1, y=-0.1, horizontalalignment='center', verticalalignment='center',
+            transform=ax0.transAxes,
+            fontsize=20)
+
+
+def medium_over_t(data, fig, subplot_spec, letter=None):
+
+    n_good = len(data)
+    colors = [f'C{i+4}' for i in range(n_good)]
+
+    gs = grd.GridSpecFromSubplotSpec(subplot_spec=subplot_spec, ncols=1, nrows=n_good)
+
+    for i in range(n_good):
+
+        ax = fig.add_subplot(gs[i, 0])
+        ax.plot(data[i], color=colors[i], linewidth=2)
+        ax.set_yticks([0, 1])
+        ax.set_yticklabels(['0', f'n/{n_good}'])
+        ax.set_ylim(0, 1)
+        # ax.set_ylabel("\n")
+
+        # ax.axhline(y=1 / (n_good - 1), linewidth=1, linestyle='--', color='0.5', zorder=-10)
+
+        if i == (n_good - 1):
+            ax.set_xlabel('$t$')
+            ax.set_xticks([0, 50, 100])
+        else:
+            ax.set_xticks([])
+
+        ax.tick_params(labelsize=8)
+
+    ax0 = fig.add_subplot(gs[:, :])
+    ax0.set_axis_off()
+
+    ax0.text(s="Used as medium", x=-0.2, y=0.5, horizontalalignment='center', verticalalignment='center',
              transform=ax0.transAxes, fontsize=10, rotation='vertical')
 
     if letter:
