@@ -1,52 +1,71 @@
 import numpy as np
 
 
+def get_money_array(bkp):
+
+    n = len(bkp.repartition)  # Number of economies in this batch
+
+    t_max = len(bkp.monetary_bhv[0][0, :])  # Take first ind from first economy as reference point
+
+    return np.array([np.mean(bkp.monetary_bhv[i][:, int(t_max/2):]) for i in range(n)])
+
+
 def for_phase_diagram(bkp):
+
     print("Formating data for phase diagram...")
 
-    n = len(bkp.repartition)
+    n = len(bkp.repartition)  # Number of economies in this batch
 
-    t_max = len(bkp.choice[0])
-
-    money = np.array([np.mean(bkp.choice[i][int(t_max/2):]) for i in range(n)])
+    money = get_money_array(bkp)
 
     unq_repartition = np.unique(bkp.repartition)
 
-    scores = np.array([np.mean([money[i] for i in range(n) if bkp.repartition[i] == r]) for r in unq_repartition])
-
+    scores = np.array([np.mean([money[i] for i in range(n) if bkp.repartition[i] == r])
+                       for r in unq_repartition])
     labels = np.unique([i[-1] for i in unq_repartition])
     n_side = len(labels)
     return scores.reshape(n_side, n_side).T, labels
 
 
+def for_parameters_plot(bkp):
+
+    cog_param = np.array(list(bkp.cognitive_parameters))
+
+    money = get_money_array(bkp)
+
+    data = {}
+    for i, name in enumerate(("alpha", "beta", "epsilon")):
+        unq = np.unique(cog_param[:, i])
+
+        d = [money[cog_param[:, i] == j] for j in unq]
+        data[name] = ([f'{j:.2f}' for j in unq], [np.mean(j) for j in d], [np.std(j) for j in d])
+
+    return data
+
+
 def for_monetary_behavior_over_t(bkp):
 
-    n = len(bkp['repartition'])
-    t_max = len(bkp['choice'])
+    n_good = len(bkp['repartition'])
+    t_max = len(bkp['monetary_bhv'][0, ])
 
-    y = np.zeros((n, t_max))
+    agent_type = np.repeat(np.arange(n_good), bkp['repartition'])
 
-    for t in range(t_max):
+    y = np.zeros((n_good, t_max))
 
-        for i in range(n):
-            y[i, t] = bkp['choice'][t][i]
+    for i in range(n_good):
+        for t in range(t_max):
+            y[i, t] = np.mean(bkp['monetary_bhv'][agent_type == i, t])
 
     return y
 
 
 def for_medium_over_t(bkp):
 
-    n = len(bkp['repartition'])
-    t_max = len(bkp['medium'])
+    n_good = len(bkp['repartition'])
 
-    ref = np.sum(bkp['repartition']) / n
+    ref = np.sum(bkp['repartition']) / n_good
 
-    y = np.zeros((n, t_max))
-
-    for t in range(t_max):
-
-        for i in range(n):
-            y[i, t] = bkp['medium'][t][i] / ref
+    y = bkp['medium'][:, :] / ref
 
     return y
 
@@ -59,15 +78,11 @@ def for_money_bar_plots(*bkps):
     for i, bkp in enumerate(bkps):
 
         n = len(bkp['repartition'])
-        t_max = len(bkp['choice'])
+        t_max = len(bkp['monetary_bhv'])
 
-        money = np.array([np.mean(bkp['choice'][int(t_max / 2):][i]) for i in range(n)])
+        money = np.array([np.mean(bkp['monetary_bhv'][int(t_max / 2):][i]) for i in range(n)])
 
         means[i] = np.mean(money)
         std = np.std(money)
 
     return means, std
-
-
-
-

@@ -7,7 +7,7 @@ from model.get_paths import get_paths
 np.seterr(all='raise')
 
 
-class RLOnAcceptanceAgent(StupidAgent):
+class RLAgent(StupidAgent):
 
     name = "RLAgent"
 
