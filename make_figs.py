@@ -85,13 +85,13 @@ def fig_sim(agent_model='RLAgent'):
     plt.show()
 
 
-def fake_data(agent_model='RLAgent'):
+def fig_fake_data(agent_model='RLAgent'):
 
     bkp = {}
     for n in 3, 4:
         for eq in True, False:
             bkp[f'single_{n}_{"equal" if eq else "not_equal"}'] = \
-                main.get_single_data(n_good=n, equal_repartition=eq, agent_model=agent_model)
+                main.get_single_data(n_good=n, equal_repartition=eq, agent_model=agent_model, fake=True)
 
     fig = plt.figure(figsize=(14, 6), dpi=200)
     fig.subplots_adjust(left=0.05, bottom=0.1, top=0.94, right=0.98)
@@ -101,23 +101,23 @@ def fake_data(agent_model='RLAgent'):
 
     for i, n in enumerate((3, 4)):
 
-        ax = fig.add_subplot(gs[i, 0])
-        data, labels = data_format.for_phase_diagram(bkp[f'phase_{n}'])
-        graph.phase_diagram(data=data, labels=labels, n_good=n, ax=ax, letter=next(letter))
+        col_idx = (i for i in range(4))
 
         data = data_format.for_monetary_behavior_over_t(bkp[f'single_{n}_not_equal'])
-        graph.monetary_behavior_over_t(data=data, fig=fig, subplot_spec=gs[i, 1], letter=next(letter))
+        graph.monetary_behavior_over_t(data=data, fig=fig, subplot_spec=gs[i, next(col_idx)],
+                                       letter=next(letter))
 
         data = data_format.for_medium_over_t(bkp[f'single_{n}_not_equal'])
-        graph.medium_over_t(data=data, fig=fig, subplot_spec=gs[i, 2], letter=next(letter))
+        graph.medium_over_t(data=data, fig=fig, subplot_spec=gs[i, next(col_idx)],
+                            letter=next(letter))
 
         data = data_format.for_monetary_behavior_over_t(bkp[f'single_{n}_equal'])
-        graph.monetary_behavior_over_t(data=data, fig=fig, subplot_spec=gs[i, 3], letter=next(letter))
+        graph.monetary_behavior_over_t(data=data, fig=fig, subplot_spec=gs[i, next(col_idx)], letter=next(letter))
 
         data = data_format.for_medium_over_t(bkp[f'single_{n}_equal'])
-        graph.medium_over_t(data=data, fig=fig, subplot_spec=gs[i, 4], letter=next(letter))
+        graph.medium_over_t(data=data, fig=fig, subplot_spec=gs[i, next(col_idx)], letter=next(letter))
 
-    ax = fig.add_subplot(gs[:, 5])
+    ax = fig.add_subplot(gs[:, 4])
 
     means, std = data_format.for_money_bar_plots(
         bkp[f'single_3_not_equal'],
@@ -132,18 +132,18 @@ def fake_data(agent_model='RLAgent'):
         '4 goods - Un. rep.'
     ], ax=ax, letter=next(letter))
 
-    ax.set_aspect(aspect=18, anchor='NE')
+    ax.set_aspect(aspect=14.5, anchor='NE')
 
     ax0 = fig.add_subplot(gs[:, :])
     ax0.set_axis_off()
 
     ax0.text(
-        s='Non-uniform repartition', x=0.4, y=1.05, horizontalalignment='center', verticalalignment='center',
+        s='Non-uniform repartition', x=0.2, y=1.05, horizontalalignment='center', verticalalignment='center',
         transform=ax0.transAxes,
         fontsize=15)
 
     ax0.text(
-        s='Uniform repartition', x=0.74, y=1.05, horizontalalignment='center', verticalalignment='center',
+        s='Uniform repartition', x=0.65, y=1.05, horizontalalignment='center', verticalalignment='center',
         transform=ax0.transAxes,
         fontsize=15)
 
@@ -157,11 +157,13 @@ def fake_data(agent_model='RLAgent'):
         transform=ax0.transAxes, rotation='vertical',
         fontsize=15)
 
-    plt.savefig(os.path.expanduser(f'fig/sim_{agent_model}.pdf'))
+    plt.savefig(os.path.expanduser(f'fig/fake_{agent_model}.pdf'))
     plt.show()
 
 
 def run():
+
+    fig_fake_data()
 
     for agent_model in ('RLAgent', 'QLearner'):
 
@@ -169,5 +171,4 @@ def run():
 
 
 if __name__ == "__main__":
-
     run()

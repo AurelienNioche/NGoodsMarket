@@ -60,7 +60,7 @@ def phase_diagram(data, labels, n_good,  title=None, ax=None, letter=None, n_tic
         print('No ax given, I will create a fig.')
         fig, ax = plt.subplots()
 
-    im = ax.imshow(data, cmap="binary", origin="lower", vmin=0.2, vmax=0.8)  # , vmin=0.5)
+    im = ax.imshow(data, cmap="binary", origin="lower", vmin=0.0, vmax=1.0)  # , vmin=0.5)
 
     # Create colorbar
     cbar = ax.figure.colorbar(im, ax=ax)
@@ -117,13 +117,13 @@ def monetary_behavior_over_t(data, fig, subplot_spec, letter=None):
         ax.plot(data[i], color=colors[i], linewidth=2)
         ax.set_yticks([0, 1])
         ax.set_ylim(0, 1)
-        # ax.set_ylabel("\n")
+        ax.set_xlim(0, len(data[i]))
 
         ax.axhline(y=1 / (n_good - 1), linewidth=1, linestyle='--', color='0.5', zorder=-10)
 
         if i == (n_good - 1):
             ax.set_xlabel('$t$')
-            ax.set_xticks([0, 50, 100])
+            ax.set_xticks([0, len(data[i])])
         else:
             ax.set_xticks([])
 
@@ -156,10 +156,11 @@ def medium_over_t(data, fig, subplot_spec, letter=None):
         ax.set_yticks([0, 1])
         ax.set_yticklabels(['0', f'n/{n_good}'])
         ax.set_ylim(0, 1)
-
+        ax.set_xlim(0, len(data[i]))
         if i == (n_good - 1):
             ax.set_xlabel('$t$')
-            ax.set_xticks([0, 50, 100])
+            ax.set_xticks([0, len(data[i])])
+
         else:
             ax.set_xticks([])
 
@@ -210,7 +211,7 @@ def money_bar_plots(means, errors, labels, ax=None, letter=None):
     ax.set_ylabel("Monetary behavior")
 
     # create
-    ax.bar(labels_pos, means, errors=errors, edgecolor="white", align="center", color="black")
+    ax.bar(labels_pos, means, yerr=errors, edgecolor="white", align="center", color="black")
 
 # ------------------------------------------------------------------------------------------------- #
 

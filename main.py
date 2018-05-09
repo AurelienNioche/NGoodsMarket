@@ -17,7 +17,7 @@ def get_parameters(
         m=0,
         constant_x_value=np.array([50, ]),
         constant_x_index=np.array([0, ]),
-        t_max=100,
+        t_max=200,
         economy_model='prod: i-1',
         range_repartition=range(10, 200, 20),
         n_cog_value=3):
@@ -105,10 +105,11 @@ def _produce_data(n_good, agent_model):
     return data
 
 
-def get_single_data(n_good, agent_model='RLAgent', force=False, equal_repartition=False, x_ref=10):
+def get_single_data(n_good, agent_model='RLAgent', force=False, equal_repartition=False, x_ref=10, fake=False):
 
     data_file = \
-        f'data/single_{n_good}_{"equal" if equal_repartition else "not_equal"}_{agent_model}.p'
+        f'data/single_{n_good}_{"equal" if equal_repartition else "not_equal"}' \
+        f'_{agent_model}{"_fake" if fake else ""}.p'
 
     if force or not os.path.exists(data_file):
 
@@ -117,8 +118,9 @@ def get_single_data(n_good, agent_model='RLAgent', force=False, equal_repartitio
             'repartition': tuple([x, ] * 2 + [y, ] * (n_good - 2)),
             'economy_model': 'prod: i-1',
             'agent_model': agent_model,
-            't_max': 100,
-            'm': 0
+            't_max': 200,
+            'm': 0,
+            'seed': np.random.randint(2**32-1)
         }
 
         if agent_model == 'RLAgent':

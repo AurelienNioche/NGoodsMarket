@@ -80,9 +80,20 @@ def for_money_bar_plots(*bkps):
 
         t_max = len(bkp['monetary_bhv'][0, ])
         money = np.mean(bkp['monetary_bhv'][:, int(t_max / 2):], axis=1)
-        print(len(money))
 
         means[i] = np.mean(money)
         sem[i] = scipy.stats.sem(money)
 
     return means, sem
+
+
+def for_stats(*bkps):
+
+    data = []
+
+    for i, bkp in enumerate(bkps):
+        t_max = len(bkp['monetary_bhv'][0, ])
+        money = np.mean(bkp['monetary_bhv'][:, int(t_max / 2):], axis=1)
+        data.append(money)
+
+    return data
