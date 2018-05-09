@@ -6,7 +6,7 @@ import os
 from analysis import data_format
 
 
-def _bar(means, std, labels, title, subplot_spec=None, fig=None):
+def _bar(means, errors, labels, title, subplot_spec=None, fig=None):
 
     if subplot_spec:
         ax = fig.add_subplot(subplot_spec)
@@ -30,7 +30,7 @@ def _bar(means, std, labels, title, subplot_spec=None, fig=None):
     ax.set_ylim(0, 1)
 
     # create
-    ax.bar(labels_pos, means, yerr=std, edgecolor="white", align="center", color="black")
+    ax.bar(labels_pos, means, yerr=errors, edgecolor="white", align="center", color="black")
 
 
 def parameters_plot(data, n_good, fig_name):
@@ -178,7 +178,7 @@ def medium_over_t(data, fig, subplot_spec, letter=None):
             fontsize=20)
 
 
-def money_bar_plots(means, std, labels, ax=None, letter=None):
+def money_bar_plots(means, errors, labels, ax=None, letter=None):
 
     if ax is None:
         print('No ax given, I will create a fig.')
@@ -210,7 +210,7 @@ def money_bar_plots(means, std, labels, ax=None, letter=None):
     ax.set_ylabel("Monetary behavior")
 
     # create
-    ax.bar(labels_pos, means, yerr=std, edgecolor="white", align="center", color="black")
+    ax.bar(labels_pos, means, errors=errors, edgecolor="white", align="center", color="black")
 
 # ------------------------------------------------------------------------------------------------- #
 
@@ -221,14 +221,16 @@ def run(bkp):
 
     m = bkp.m[0]  # Take first economy as reference point
     n_good = len(bkp.repartition[0])  # Take first economy as reference point
-    fixed_type_n = bkp.repartition[0][0]
+    constant_x_value = bkp.constant_x_value[0][0]
+
+    assert np.all(np.array(constant_x_value[0]) == constant_x_value[0][0])
 
     data, labels = data_format.for_phase_diagram(bkp)
 
     if n_good == 3:
-        title = f'Money emergence with $x_0 = {fixed_type_n}$ and $m = {m}$'
+        title = f'Money emergence with $x_0 = {constant_x_value}$ and $m = {m}$'
     elif n_good == 4:
-        title = f'Money emergence with $x_0, x_1 = {fixed_type_n}$ and $m = {m}$'
+        title = f'Money emergence with $x_0, x_1 = {constant_x_value}$ and $m = {m}$'
     else:
         title = f'Money emergence with $m = {m}$'
 

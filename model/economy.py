@@ -7,7 +7,8 @@ from model.q_learner import QLearner
 
 class Economy(object):
 
-    def __init__(self, repartition, t_max, agent_model, economy_model, cognitive_parameters=None, seed=None, m=0):
+    def __init__(self, repartition, t_max, agent_model, economy_model, cognitive_parameters=None, seed=None, m=0,
+                 **kwargs):  # Args for analysis
 
         np.random.seed(seed)
         self.t_max = t_max

@@ -15,12 +15,17 @@ def get_parameters(
         n_good=3,
         agent_model='RLAgent',
         m=0,
-        constant_x_value=50,
+        constant_x_value=np.array([50, ]),
         constant_x_index=np.array([0, ]),
         t_max=100,
         economy_model='prod: i-1',
         range_repartition=range(10, 200, 20),
         n_cog_value=3):
+
+    assert len(constant_x_value) == len(constant_x_index), \
+        '"constant_x_value" and "constant_x_index" should have equal size!'
+    assert agent_model in ('RLAgent', 'QLearner'), 'Bad argument for "agent_model"!'
+    assert economy_model in ('prod: i-1', 'prod: i+1'), 'Bad argument for "economy_model"!'
 
     if agent_model == 'RLAgent':
         first_cog_range = np.linspace(0.1, 0.5, n_cog_value)
@@ -48,9 +53,10 @@ def get_parameters(
 
         complete_rpt = np.zeros(n_good, dtype=int)
         gen_rpt = (i for i in rpt)
+        gen_cst = (i for i in constant_x_value)
         for i in range(n_good):
             if i in constant_x_index:
-                complete_rpt[i] = constant_x_value
+                complete_rpt[i] = next(gen_cst)
             else:
                 complete_rpt[i] = next(gen_rpt)
         complete_rpt = tuple(complete_rpt)
@@ -62,7 +68,9 @@ def get_parameters(
             'economy_model': economy_model,
             'agent_model': agent_model,
             'm': m,
-            'seed': np.random.randint(2**32-1)
+            'seed': np.random.randint(2**32-1),
+            'constant_x_index': constant_x_index,
+            'constant_x_value': constant_x_value
         }
         parameters.append(param)
 
@@ -80,7 +88,8 @@ def _produce_data(n_good, agent_model):
     tqdm.write("Run simulations.")
 
     param = get_parameters(n_good=n_good, agent_model=agent_model,
-                           constant_x_index=np.array([0, ]) if n_good == 3 else np.array([0, 1]))
+                           constant_x_index=np.array([0, ]) if n_good == 3 else np.array([0, 1]),
+                           constant_x_value=np.array([50, ]) if n_good == 3 else np.array([50, 50]))
 
     max_ = len(param)
 

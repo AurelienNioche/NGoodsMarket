@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.stats
 
 
 def get_money_array(bkp):
@@ -73,16 +74,15 @@ def for_medium_over_t(bkp):
 def for_money_bar_plots(*bkps):
 
     means = np.zeros(len(bkps))
-    std = np.zeros(len(bkps))
+    sem = np.zeros(len(bkps))
 
     for i, bkp in enumerate(bkps):
 
-        n = len(bkp['repartition'])
-        t_max = len(bkp['monetary_bhv'])
-
-        money = np.array([np.mean(bkp['monetary_bhv'][int(t_max / 2):][i]) for i in range(n)])
+        t_max = len(bkp['monetary_bhv'][0, ])
+        money = np.mean(bkp['monetary_bhv'][:, int(t_max / 2):], axis=1)
+        print(len(money))
 
         means[i] = np.mean(money)
-        std = np.std(money)
+        sem[i] = scipy.stats.sem(money)
 
-    return means, std
+    return means, sem
