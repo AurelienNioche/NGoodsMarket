@@ -205,6 +205,14 @@ def money_bar_plots(means, errors, labels, ax=None, letter=None):
     ax.set_xticklabels(labels, rotation='vertical')
     ax.set_xticks(labels_pos)
 
+    ax.axhline(y=max(means[0:2])+0.05, xmin=0.15, xmax=0.4, color='black')
+    ax.text(s='***',
+            y=max(means[0:2])+0.075, x=0.5, horizontalalignment='center', verticalalignment='center')
+
+    ax.axhline(y=max(means[2:4]) + 0.06, xmin=0.63, xmax=0.88, color='black')
+    ax.text(s='***',
+            y=max(means[2:4]) + 0.085, x=2.5, horizontalalignment='center', verticalalignment='center')
+
     ax.set_ylim(0, 1)
     ax.set_yticks((0, 0.5, 1))
 
